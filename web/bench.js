@@ -2,7 +2,9 @@
 // line, running in the server), watch it live, read the scorecard, compare runs.
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const pct = (v) => (v === null || v === undefined ? "–" : `${v}%`);
+// scorecards can come from anyone (results/ is shared): every value is a checked number or escaped text
+const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+const pct = (v) => (num(v) === null ? "–" : `${num(v)}%`);
 const SUITE_NAMES = { decisions: "Decisions", rally: "Rally", arena: "Arena" };
 
 /** "2026-10-10 07:24" in the viewer's time zone (scorecards store UTC). */
@@ -196,19 +198,22 @@ export class Bench {
   }
 
   #card(r) {
-    const d = r.suites.decisions, ra = r.suites.rally, ar = r.suites.arena;
-    $("bCardLink").textContent = r.id ? "scorecard.md" : "";
-    $("bCardLink").href = r.id ? `/results/${encodeURIComponent(r.id)}/scorecard.md` : "#";
-    const bar = (label, v) => `<div class="b"><span>${label}</span><span class="track"><i style="width:${v ?? 0}%"></i></span><span class="pct">${pct(v)}</span></div>`;
+    const d = r.suites?.decisions, ra = r.suites?.rally, ar = r.suites?.arena;
+    const id = typeof r.id === "string" ? r.id : "";
+    $("bCardLink").textContent = id ? "scorecard.md" : "";
+    $("bCardLink").href = id ? `/results/${encodeURIComponent(id)}/scorecard.md` : "#";
+    const n = (v) => esc(num(v) ?? "–");
+    const bar = (label, v) => `<div class="b"><span>${label}</span><span class="track"><i style="width:${Math.max(0, Math.min(100, num(v) ?? 0))}%"></i></span><span class="pct">${esc(pct(v))}</span></div>`;
+    const acc = (x) => `${esc(pct(x?.accuracy))} of ${n(x?.of)}`;
     $("bCardBody").innerHTML = `
-      <div class="score-row"><div class="big">${r.score ?? "–"}</div><div class="sub">PongBench score for <b>${esc(r.model.name)}</b>, track ${esc(r.track)}${r.quick ? " (quick)" : ""}<br>
-      ${esc(localTime(r.created))}, ${r.calls?.calls ?? "?"} calls, ${r.calls?.errors ?? 0} errors${r.label ? `<br>${esc(r.label)}` : ""}</div></div>
-      ${d ? `<div class="bars card-bars">${bar("up", d.per_move.up.accuracy)}${bar("down", d.per_move.down.accuracy)}${bar("stay", d.per_move.stay.accuracy)}${bar("<b>macro</b>", d.macro_accuracy)}</div>
-        <div class="kv">${Object.entries(d.bands).map(([k, b]) => `<span>move needed, ${k} off centre</span><b>${pct(b.accuracy)} of ${b.of}</b>`).join("")}
-        <span>up to the top edge</span><b>${pct(d.edges.top.accuracy)} of ${d.edges.top.of}</b><span>down to the bottom edge</span><b>${pct(d.edges.bottom.accuracy)} of ${d.edges.bottom.of}</b>
-        <span>probabilities</span><b>${d.calibration ? `the model's own (Brier ${d.calibration.brier}, ECE ${d.calibration.ece})` : "one answer only"}</b>
-        <span>latency</span><b>p50 ${d.latency_ms.p50} ms, p95 ${d.latency_ms.p95} ms${d.tokens ? `, ${d.tokens.per_decision_input} input tokens per decision` : ""}</b></div>` : ""}
-      ${ra ? `<div class="kv"><span>rally rate</span><b>${pct(ra.rally_rate)} (${ra.returns} returns, ${ra.misses} misses, longest rally ${ra.longest_rally})</b></div>` : ""}
-      ${ar ? `<div class="kv"><span>arena</span><b>${pct(ar.points_won)} of points won: ${ar.games.map((g) => `${g.bot} ${g.score}`).join(", ")}</b></div>` : ""}`;
+      <div class="score-row"><div class="big">${n(r.score)}</div><div class="sub">PongBench score for <b>${esc(r.model?.name)}</b>, track ${esc(r.track)}${r.quick ? " (quick)" : ""}<br>
+      ${esc(localTime(r.created))}, ${n(r.calls?.calls)} calls, ${n(r.calls?.errors ?? 0)} errors${r.label ? `<br>${esc(r.label)}` : ""}</div></div>
+      ${d ? `<div class="bars card-bars">${bar("up", d.per_move?.up?.accuracy)}${bar("down", d.per_move?.down?.accuracy)}${bar("stay", d.per_move?.stay?.accuracy)}${bar("<b>macro</b>", d.macro_accuracy)}</div>
+        <div class="kv">${Object.entries(d.bands || {}).map(([k, b]) => `<span>move needed, ${esc(k)} off centre</span><b>${acc(b)}</b>`).join("")}
+        <span>up to the top edge</span><b>${acc(d.edges?.top)}</b><span>down to the bottom edge</span><b>${acc(d.edges?.bottom)}</b>
+        <span>probabilities</span><b>${d.calibration ? `the model's own (Brier ${n(d.calibration.brier)}, ECE ${n(d.calibration.ece)})` : "one answer only"}</b>
+        <span>latency</span><b>p50 ${n(d.latency_ms?.p50)} ms, p95 ${n(d.latency_ms?.p95)} ms${d.tokens ? `, ${n(d.tokens.per_decision_input)} input tokens per decision` : ""}</b></div>` : ""}
+      ${ra ? `<div class="kv"><span>rally rate</span><b>${esc(pct(ra.rally_rate))} (${n(ra.returns)} returns, ${n(ra.misses)} misses, longest rally ${n(ra.longest_rally)})</b></div>` : ""}
+      ${ar ? `<div class="kv"><span>arena</span><b>${esc(pct(ar.points_won))} of points won: ${(Array.isArray(ar.games) ? ar.games : []).map((g) => `${esc(g.bot)} ${esc(g.score)}`).join(", ")}</b></div>` : ""}`;
   }
 }

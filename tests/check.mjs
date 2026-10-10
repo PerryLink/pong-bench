@@ -10,8 +10,8 @@
 //   runner    a quick run end to end, scorecard and leaderboard written, scores as expected
 //   server    /api/state, the WebSocket decision channel, /api/check, a Bench run over HTTP with live events
 import assert from "node:assert/strict";
-import { createServer } from "node:http";
-import { mkdtempSync, existsSync, readFileSync } from "node:fs";
+import { createServer, request } from "node:http";
+import { mkdtempSync, existsSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -23,12 +23,14 @@ const { createMatch, serve, advance, decisionState, GAME_DEFAULTS } = await impo
 const P = await import("../src/game/prompts.js");
 const { loadDecisions, buildDecisions, hashItems } = await import("../src/bench/suites.js");
 const { connect } = await import("../src/connectors/index.js");
-const { checkConfig, publicConfig, loadConfig } = await import("../src/config.js");
+const { checkConfig, publicConfig, loadConfig, resolveKey } = await import("../src/config.js");
 const { runBench, saveRun, inputFor } = await import("../src/bench/runner.js");
 const { playRally } = await import("../src/bench/matches.js");
-const { writeLeaderboard } = await import("../src/bench/report.js");
+const { writeLeaderboard, renderLeaderboard, latestRuns } = await import("../src/bench/report.js");
+const { decisionMetrics } = await import("../src/bench/metrics.js");
 const { probsFromLogprobs } = await import("../src/connectors/openai.js");
 
+const JSON_TYPE = { "content-type": "application/json" };
 let passed = 0;
 async function t(name, fn) {
   try { await fn(); passed += 1; console.log(`  ok  ${name}`); }
@@ -259,9 +261,9 @@ await t("the app's server: state, WebSocket decisions, check, a Bench run with l
     assert.equal(answer.choice, "up");
     ws.close();
   } else console.log("       (no WebSocket client in this Node: the channel is checked over HTTP only)");
-  const viaHttp = await (await fetch(`${base}/api/decide`, { method: "POST", body: JSON.stringify({ state: input.state(item.ds), questions: input.questions }) })).json();
+  const viaHttp = await (await fetch(`${base}/api/decide`, { method: "POST", headers: JSON_TYPE, body: JSON.stringify({ state: input.state(item.ds), questions: input.questions }) })).json();
   assert.equal(viaHttp.choice, "up");
-  const chk = await (await fetch(`${base}/api/check`, { method: "POST", body: "{}" })).json();
+  const chk = await (await fetch(`${base}/api/check`, { method: "POST", headers: JSON_TYPE, body: "{}" })).json();
   assert.equal(chk.rows.filter((r) => r.right).length, 4);
   const events = [];
   const ctl = new AbortController();
@@ -278,7 +280,7 @@ await t("the app's server: state, WebSocket decisions, check, a Bench run with l
     }
   }).catch(() => {});
   await new Promise((ok) => setTimeout(ok, 100));
-  const go = await (await fetch(`${base}/api/bench/start`, { method: "POST", body: JSON.stringify({ suites: ["decisions"], quick: true }) })).json();
+  const go = await (await fetch(`${base}/api/bench/start`, { method: "POST", headers: JSON_TYPE, body: JSON.stringify({ suites: ["decisions"], quick: true }) })).json();
   assert.equal(go.started, true);
   for (let i = 0; i < 100 && !events.some((e) => e.type === "saved" || e.type === "error"); i += 1) await new Promise((ok) => setTimeout(ok, 50));
   ctl.abort();
@@ -288,6 +290,99 @@ await t("the app's server: state, WebSocket decisions, check, a Bench run with l
   assert.ok(events.some((e) => e.type === "progress"));
   const list = await (await fetch(`${base}/api/results`)).json();
   assert.ok(list.some((x) => x.id === saved.id));
+  server.close();
+});
+
+console.log("integrity");
+await t("macro accuracy comes from the counts, not from rounded percentages", async () => {
+  const items = ["up", "up", "up", "down", "down", "down", "stay", "stay", "stay"].map((rule, i) => ({ id: `x${i}`, kind: rule === "stay" ? "away" : rule, rule,
+    ds: { court: { w: 160, h: 100 }, paddle: { y: 50, h: 20 }, interceptY: rule === "stay" ? null : 20, ball: { x: 80, y: 50, vx: 1, vy: 0 } } }));
+  const records = items.map((it, i) => ({ choice: i % 3 === 0 ? it.rule : "zzz", probs: [1 / 3, 1 / 3, 1 / 3], probSource: "one-hot", ms: 1 }));
+  assert.equal(decisionMetrics(items, records).macro_accuracy, 33.33);
+});
+
+await t("a run with another stay tolerance is graded by that tolerance", async () => {
+  const cfg = checkConfig({ connector: "mock", policy: "oracle", tolerance: 10 }, "oracle10.json");
+  const out = await runBench({ connector: await connect(cfg), config: cfg, suites: ["decisions"], quick: true, tol: 10 });
+  assert.equal(out.result.suites.decisions.macro_accuracy, 100);
+});
+
+await t("a scorecard counts only its own calls", async () => {
+  const cfg = checkConfig({ connector: "mock", policy: "oracle" }, "oracle.json");
+  const c = await connect(cfg);
+  for (let i = 0; i < 5; i += 1) await c.decide({ state: {}, questions: inputFor("standard").questions });
+  const out = await runBench({ connector: c, config: cfg, suites: ["decisions"], quick: true });
+  assert.equal(out.result.calls.calls, 300);
+});
+
+await t("the leaderboard ranks comparable runs only, the latest per model and track", async () => {
+  const cfg = checkConfig({ connector: "mock", policy: "oracle" }, "oracle.json");
+  const base = { ...(await runBench({ connector: await connect(cfg), config: cfg })).result, id: "base" };
+  const as = (name, extra = {}) => ({ ...base, id: name, model: { ...base.model, name }, ...extra });
+  const cards = [
+    as("Fair"),
+    as("Biased", { stay_bias: 0.3 }), as("Loose", { tolerance: 8 }), as("Custom", { track: "custom" }),
+    as("Foreign", { versions: { ...base.versions, decisions: { ...base.versions.decisions, sha256: "0".repeat(64) } } }),
+    as("Flaky", { calls: { ...base.calls, errors: 100 } }),
+    as("Again", { created: "2026-01-01T00:00:00.000Z", score: 99.9 }), as("Again", { id: "again-new", created: "2026-02-01T00:00:00.000Z", score: 50 }),
+  ];
+  const md = renderLeaderboard(cards);
+  for (const name of ["Biased", "Loose", "Custom", "Foreign", "Flaky"]) assert.ok(!md.includes(`| ${name} |`), name);
+  assert.ok(md.includes("| Fair |"));
+  assert.ok(md.includes("again-new") && !md.includes("**99.9**"));
+  const quickCard = { ...(await runBench({ connector: await connect(cfg), config: cfg, quick: true })).result, id: "q" };
+  assert.ok(!latestRuns([quickCard]).length && latestRuns([quickCard], { allowQuick: true }).length === 1);
+});
+
+console.log("security");
+await t("keys: no line breaks, never in errors, never in public query strings", async () => {
+  process.env.TEST_NL_KEY = "sk-abc\ndef-0123456789";
+  assert.throws(() => resolveKey(checkConfig({ connector: "openai", baseUrl: "x", apiKeyEnv: "TEST_NL_KEY" })), /key/i);
+  process.env.TEST_ECHO_KEY = "sk-echo-0123456789abcdef";
+  const srv = await mockServer(() => [401, { error: "bad key sk-echo-0123456789abcdef" }]);
+  const c = await connect(checkConfig({ connector: "systemone", url: `${srv.url}/v1/systemone`, apiKeyEnv: "TEST_ECHO_KEY", retries: 0 }));
+  const e = await c.decide({ state: {}, questions: inputFor("standard").questions }).catch((x) => x);
+  assert.ok(e instanceof Error);
+  assert.ok(!`${e.message} ${e.detail}`.includes("0123456789abcdef") && !c.stats.lastError.includes("0123456789abcdef"));
+  srv.close();
+  const pub = publicConfig(checkConfig({ connector: "openai", baseUrl: "https://g.example/v1?key=abc123xyz", query: { key: "abc123xyz", "api-version": "2025-01" }, model: "m", auth: "none" }));
+  assert.ok(!JSON.stringify(pub).includes("abc123xyz"));
+  assert.ok(JSON.stringify(pub).includes("2025-01"));
+});
+
+await t("the app refuses other websites, foreign hosts, non-JSON bodies and config paths", async () => {
+  const { serve: start } = await import("../src/server/server.js");
+  const server = await start({ config: "mock-oracle", port: 0, host: "127.0.0.1" });
+  const port = server.address().port, base = `http://127.0.0.1:${port}`;
+  const post = (path, body, headers = JSON_TYPE) => fetch(`${base}${path}`, { method: "POST", headers, body: JSON.stringify(body) });
+  const q = { state: {}, questions: inputFor("standard").questions };
+  assert.equal((await post("/api/decide", q, { ...JSON_TYPE, origin: "https://evil.example" })).status, 403);
+  assert.equal((await post("/api/decide", q, { "content-type": "text/plain" })).status, 415);
+  assert.equal((await post("/api/decide", q, { ...JSON_TYPE, origin: base })).status, 200);
+  assert.equal((await post("/api/config", { id: "mock-oracle" }, { ...JSON_TYPE, origin: base })).status, 200);
+  for (const id of ["../data/recordings/x", "C:/x", "//evil/share/cfg", "configs/mock-oracle", "/etc/passwd"]) {
+    assert.equal((await post("/api/config", { id })).status, 400, id);
+  }
+  const hostStatus = await new Promise((ok) => {
+    const r = request({ host: "127.0.0.1", port, path: "/api/state", headers: { host: `evil.example:${port}` } }, (res) => { res.resume(); ok(res.statusCode); });
+    r.on("error", () => ok("error"));
+    r.end();
+  });
+  assert.equal(hostStatus, 403);
+  const wsResult = await new Promise((ok) => {
+    const r = request({ host: "127.0.0.1", port, path: "/ws", headers: { connection: "Upgrade", upgrade: "websocket", "sec-websocket-version": "13",
+                                                                       "sec-websocket-key": "dGhlIHNhbXBsZSBub25jZQ==", origin: "https://evil.example" } });
+    r.on("upgrade", (res, socket) => { socket.destroy(); ok("upgraded"); });
+    r.on("response", (res) => { res.resume(); ok(res.statusCode); });
+    r.on("error", () => ok("refused"));
+    r.end();
+  });
+  assert.notEqual(wsResult, "upgraded");
+  const rec = await (await post("/api/recordings", { snaps: [], created: "../../configs/", seed: 1 })).json();
+  assert.match(rec.name, /^[A-Za-z0-9_-]+$/);
+  assert.ok(readdirSync(join(process.env.PONGBENCH_DATA, "recordings")).includes(`${rec.name}.json`));
+  assert.equal((await post("/api/bench/start", { suites: ["arena"], bots: ["<img src=x onerror=alert(1)>"] })).status, 400);
+  assert.equal((await post("/api/bench/start", { suites: ["decisions"], track: "<b>" })).status, 400);
   server.close();
 });
 

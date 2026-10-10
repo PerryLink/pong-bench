@@ -2,6 +2,10 @@
 // question here, and this process calls the endpoint), the Bench runner with live progress, results, saved games,
 // recordings, and saved prompts and setups. Binds to 127.0.0.1 by default.
 //
+// Other websites cannot use it: requests must name this server in Host (no DNS rebinding), browsers' Origin must be
+// this app's own (no cross-site requests or WebSockets), bodies must be JSON (no preflight-free form posts), and
+// configs are picked by name from configs/ only. PONGBENCH_ALLOWED_HOSTS=a,b adds host names (e.g. for a LAN).
+//
 //   WS   /ws                    {id, state, questions} -> {id, choice, probs, probSource, ms, serverMs, usage} | {id, error}
 //   POST /api/decide            the same over HTTP
 //   GET  /api/state             the active endpoint (nothing secret) and its call counters
@@ -13,9 +17,10 @@
 //   GET/PUT/DELETE /api/store/<prompts|setups>[/<name>]  saved prompts and setups (data/store/)
 import { createServer } from "node:http";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync, renameSync } from "node:fs";
-import { extname, join, normalize, resolve } from "node:path";
+import { extname, join, normalize, resolve, sep } from "node:path";
 import { acceptWebSocket } from "./ws.js";
-import { ROOT, loadConfig, listConfigs, publicConfig } from "../config.js";
+import { ROOT, loadConfig, loadNamedConfig, listConfigs, publicConfig } from "../config.js";
+import { BOT_LEVELS } from "../game/realtime.js";
 import { connect } from "../connectors/index.js";
 import { runBench, saveRun, inputFor, RESULTS_DIR, SUITES } from "../bench/runner.js";
 import { loadDecisions, SUITE_DIR } from "../bench/suites.js";
@@ -28,22 +33,23 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; ch
                 ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
 const NAME = /^[A-Za-z0-9_.-]{1,100}$/;
 const TRACK_OK = ["standard", "compact", "minimal", "reasoning"];
-const LIMITS = { body: 256 * 1024, recording: 8 * 1024 * 1024, chunk: 2 * 1024 * 1024, game: 64 * 1024 * 1024 };
+const LIMITS = { body: 256 * 1024, decide: 64 * 1024, recording: 8 * 1024 * 1024, chunk: 2 * 1024 * 1024, game: 64 * 1024 * 1024 };
+const LOOPBACK = ["127.0.0.1", "localhost", "[::1]", "::1"];
+const RESERVED = new Set(["__proto__", "constructor", "prototype"]);
 
 export async function serve({ config, port = 8800, host = "127.0.0.1" } = {}) {
   // one bad request must never stop the server
   process.on("unhandledRejection", (e) => console.error(`unhandled: ${e?.message || e}`));
   const app = { cfg: null, connector: null, error: "", bench: null, benchLog: [], listeners: new Set() };
 
-  async function activate(ref) {
-    const cfg = loadConfig(ref);
+  async function activate(cfg) {
     const connector = await connect(cfg);
     await app.connector?.close();
     Object.assign(app, { cfg, connector, error: "" });
     return cfg;
   }
   try {
-    await activate(config || "mock-oracle");
+    await activate(loadConfig(config || "mock-oracle"));    // the command line may name a file
   } catch (e) {
     app.error = e.message;
     console.error(`endpoint: ${e.message} (pick another in the app, or fix the config)`);
@@ -94,10 +100,19 @@ export async function serve({ config, port = 8800, host = "127.0.0.1" } = {}) {
     if (!app.connector) throw new Error(app.error || "no endpoint is active");
     const suites = (opts.suites || ["decisions", "rally"]).filter((s) => SUITES.includes(s));
     if (!suites.length) throw new Error("pick at least one suite");
+    const track = opts.track || "standard";
+    if (track === "custom" ? !opts.prompt || typeof opts.prompt !== "object" : !TRACK_OK.includes(track)) {
+      throw new Error(`track must be one of ${TRACK_OK.join(", ")}, or custom with a prompt`);
+    }
+    const bots = opts.bots === undefined || opts.bots === null ? [] : opts.bots;
+    if (!Array.isArray(bots) || bots.length > 4 || !bots.every((b) => typeof b === "string" && Object.hasOwn(BOT_LEVELS, b))) {
+      throw new Error(`bots are up to four of ${Object.keys(BOT_LEVELS).join(", ")}`);
+    }
     const ctl = new AbortController();
-    const options = { suites, track: opts.track || "standard", quick: !!opts.quick, concurrency: clampInt(opts.concurrency, 1, 32, 4),
-                      stayBias: Number(opts.stayBias) || 0, tol: clampInt(opts.tol, 1, 20, 5), label: String(opts.label || "").slice(0, 120),
-                      arena: { bots: Array.isArray(opts.bots) && opts.bots.length ? opts.bots : undefined, maxSeconds: clampInt(opts.arenaSeconds, 10, 600, 150) } };
+    const options = { suites, track, quick: !!opts.quick, concurrency: clampInt(opts.concurrency, 1, 32, 4),
+                      stayBias: Math.max(0, Math.min(1, Number(opts.stayBias) || 0)), tol: clampInt(opts.tol, 1, 20, 5),
+                      label: String(opts.label || "").slice(0, 120),
+                      arena: { bots: bots.length ? bots : undefined, maxSeconds: clampInt(opts.arenaSeconds, 10, 600, 150) } };
     app.bench = { ctl, started: new Date().toISOString(), options };
     app.benchLog = [];
     emit({ type: "started", options, endpoint: app.cfg.name });
@@ -120,15 +135,17 @@ export async function serve({ config, port = 8800, host = "127.0.0.1" } = {}) {
   const server = createServer(async (req, res) => {
     const url = new URL(req.url, "http://x");
     const p = url.pathname;
+    const refused = guard(req, server.address().port, host);
+    if (refused) return json(res, { error: refused.error }, refused.status);
     try {
       if (p === "/api/state") return json(res, state());
       if (p === "/api/configs") return json(res, listConfigs());
       if (p === "/api/config" && req.method === "POST") {
         const { id } = await body(req);
-        try { const cfg = await activate(id); return json(res, { ok: true, config: publicConfig(cfg) }); }
+        try { const cfg = await activate(loadNamedConfig(id)); return json(res, { ok: true, config: publicConfig(cfg) }); }
         catch (e) { app.error = e.message; return json(res, { ok: false, error: e.message }, 400); }
       }
-      if (p === "/api/decide" && req.method === "POST") return json(res, await decide(await body(req)));
+      if (p === "/api/decide" && req.method === "POST") return json(res, await decide(await body(req, LIMITS.decide)));
       if (p === "/api/check" && req.method === "POST") return json(res, await check(await body(req)));
       if (p === "/api/bench/start" && req.method === "POST") return json(res, await startBench(await body(req)));
       if (p === "/api/bench/stop" && req.method === "POST") { app.bench?.ctl.abort(); return json(res, { stopping: !!app.bench }); }
@@ -168,6 +185,8 @@ export async function serve({ config, port = 8800, host = "127.0.0.1" } = {}) {
 
   server.on("upgrade", (req, socket) => {
     if (new URL(req.url, "http://x").pathname !== "/ws") return socket.destroy();
+    const refused = guard(req, server.address().port, host);
+    if (refused) { socket.end(`HTTP/1.1 ${refused.status} Forbidden\r\nconnection: close\r\n\r\n`); return; }
     const ws = acceptWebSocket(req, socket, {
       onMessage: async (text) => {
         let msg;
@@ -188,6 +207,28 @@ export async function serve({ config, port = 8800, host = "127.0.0.1" } = {}) {
 }
 
 // ------------------------------------------------------------------ helpers
+/** Why this request is refused ({status, error}), or null. See the header comment. */
+function guard(req, port, bindHost) {
+  const extra = (process.env.PONGBENCH_ALLOWED_HOSTS || "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+  const allowed = new Set([...LOOPBACK, ...extra, ...(["0.0.0.0", "::"].includes(bindHost) ? [] : [String(bindHost).toLowerCase()])]);
+  const ours = (hostname, p) => allowed.has(hostname.toLowerCase()) && Number(p || 80) === port;
+  let h;
+  try { h = new URL(`http://${req.headers.host || ""}`); } catch { return { status: 403, error: "bad Host header" }; }
+  if (!ours(h.hostname, h.port)) return { status: 403, error: `this server answers to 127.0.0.1:${port} and localhost:${port} only` };
+  const origin = req.headers.origin;
+  if (origin !== undefined) {
+    let o = null;
+    try { o = new URL(origin); } catch { /* "null" and other opaque origins */ }
+    if (!o || o.protocol !== "http:" || !ours(o.hostname, o.port)) return { status: 403, error: "requests from other websites are refused" };
+  }
+  if (req.headers["sec-fetch-site"] === "cross-site") return { status: 403, error: "requests from other websites are refused" };
+  const hasBody = Number(req.headers["content-length"] || 0) > 0 || req.headers["transfer-encoding"] !== undefined;
+  if (["POST", "PUT", "DELETE"].includes(req.method) && hasBody && !/^application\/json\b/i.test(req.headers["content-type"] || "")) {
+    return { status: 415, error: "send JSON (content-type: application/json)" };
+  }
+  return null;
+}
+
 function clampInt(v, lo, hi, def) { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : def; }
 
 function json(res, obj, status = 200) {
@@ -201,8 +242,8 @@ function send(res, buf, ext) {
 }
 
 function file(res, base, rel) {
-  const full = normalize(join(base, decodeURIComponent(rel)));
-  if (!full.startsWith(resolve(base)) || !existsSync(full) || !statSync(full).isFile()) return json(res, { error: "not found" }, 404);
+  const full = normalize(join(base, decodeURIComponent(rel))), root = resolve(base);
+  if (!full.startsWith(root + sep) || !existsSync(full) || !statSync(full).isFile()) return json(res, { error: "not found" }, 404);
   return send(res, readFileSync(full), extname(full));
 }
 
@@ -253,9 +294,12 @@ async function recordings(req, res, p) {
   if (p === "/api/recordings" && req.method === "POST") {
     const rec = await body(req, LIMITS.recording);
     if (!Array.isArray(rec.snaps)) return json(res, { error: "not a recording" }, 400);
-    const tag = String(rec.settings?.prompt || "run").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
-    const name = `${String(rec.created || new Date().toISOString()).replace(/[-:T]/g, "").slice(0, 14)}_${tag}_seed${Number(rec.seed) || 0}`;
-    writeFileSync(join(RECS, `${name}.json`), JSON.stringify(rec));
+    const tag = String(rec.settings?.prompt || "run").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30) || "run";
+    const stamp = String(rec.created || "").replace(/\D/g, "").slice(0, 14) || new Date().toISOString().replace(/\D/g, "").slice(0, 14);
+    const name = `${stamp}_${tag}_seed${Math.abs(Math.trunc(Number(rec.seed) || 0))}`;
+    const f = resolve(RECS, `${name}.json`);
+    if (!NAME.test(name) || !f.startsWith(resolve(RECS) + sep)) return json(res, { error: "bad recording name" }, 400);
+    writeFileSync(f, JSON.stringify(rec));
     return json(res, { name });
   }
   const name = decodeURIComponent(p.slice("/api/recordings/".length));
@@ -272,7 +316,7 @@ async function store(req, res, p) {
   const all = existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : {};
   if (!raw) return json(res, all);
   const name = decodeURIComponent(raw).trim();
-  if (!name || name.length > 60 || /[\u0000-\u001f]/.test(name)) return json(res, { error: "a name is 1 to 60 printable characters" }, 400);
+  if (!name || name.length > 60 || /[\u0000-\u001f]/.test(name) || RESERVED.has(name)) return json(res, { error: "a name is 1 to 60 printable characters" }, 400);
   if (req.method === "PUT") {
     const entry = await body(req, 16 * 1024);
     if (!entry || typeof entry !== "object") return json(res, { error: "an entry is a JSON object" }, 400);
