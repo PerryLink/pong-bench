@@ -1,4 +1,5 @@
-* text=auto
+# LF in every checkout (shell scripts and the #! line of bin/pongbench.js break on CRLF); CRLF only for Windows batch files
+* text=auto eol=lf
 *.bat text eol=crlf
 *.png binary
 *.gz binary

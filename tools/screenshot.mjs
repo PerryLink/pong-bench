@@ -14,7 +14,9 @@ const opt = (k, d) => { const i = argv.indexOf(`--${k}`); return i > 0 ? argv[i 
 const scripts = argv.flatMap((a, i) => (a === "--js" ? [argv[i + 1]] : []));
 const [w, h] = opt("size", "1500x940").split("x");
 const CHROME = [process.env.CHROME, "C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/usr/bin/google-chrome", "/usr/bin/chromium"].find((p) => p && existsSync(p));
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/Applications/Chromium.app/Contents/MacOS/Chromium",
+  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge", "/usr/bin/google-chrome", "/usr/bin/google-chrome-stable",
+  "/usr/bin/chromium", "/usr/bin/chromium-browser", "/snap/bin/chromium", "/usr/bin/microsoft-edge"].find((p) => p && existsSync(p));
 if (!url || !out || !CHROME) { console.error("usage: node tools/screenshot.mjs <url> <out.png> (needs Chrome; set CHROME=...)"); process.exit(2); }
 if (typeof WebSocket !== "function") { console.error("needs Node 22+ (global WebSocket)"); process.exit(2); }
 
