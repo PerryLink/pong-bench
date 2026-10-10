@@ -45,15 +45,44 @@ export function checkConfig(cfg, file = "") {
   return { ...cfg, id, name: cfg.name || id, file, baseDir: file ? dirname(file) : process.cwd() };
 }
 
-/** The key for a config, or undefined. */
+/** The key for a config, or undefined. A key is one line of printable characters (anything else ends up in errors). */
 export function resolveKey(cfg) {
+  let key, from;
   if (cfg.apiKeyFile) {
     const f = resolve(cfg.baseDir || ROOT, cfg.apiKeyFile);
     if (!existsSync(f)) throw new Error(`apiKeyFile ${f} does not exist`);
-    return readFileSync(f, "utf8").trim();
+    [key, from] = [readFileSync(f, "utf8").trim(), `the file ${basename(f)}`];
+  } else {
+    const env = cfg.apiKeyEnv || DEFAULT_KEY_ENV[cfg.connector];
+    [key, from] = [env ? process.env[env] || undefined : undefined, `$${env}`];
   }
-  const env = cfg.apiKeyEnv || DEFAULT_KEY_ENV[cfg.connector];
-  return env ? process.env[env] || undefined : undefined;
+  if (key !== undefined && !/^[!-~]+$/.test(key)) {
+    throw new Error(`the key in ${from} has spaces, line breaks or other characters a key cannot have (one line, printable ASCII)`);
+  }
+  return key;
+}
+
+/** A config by name only (configs/<name>.json): what the app accepts, so a web page can never point it at a file. */
+export function loadNamedConfig(name) {
+  if (typeof name !== "string" || !/^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,99}$/.test(name) || name.includes("..")) {
+    throw new Error("a config is picked by its name in configs/ (letters, digits, - _ .)");
+  }
+  const file = join(CONFIG_DIR, name.endsWith(".json") ? name : `${name}.json`);
+  if (!existsSync(file)) throw new Error(`no config "${name}" in configs/`);
+  return loadConfig(file);
+}
+
+const SECRET_PARAM = /key|token|secret|sig|password|auth|credential/i;
+/** A URL with the values of key-like query parameters masked. */
+export function maskUrl(u) {
+  if (typeof u !== "string" || !u.includes("?")) return u;
+  try {
+    const url = new URL(u);
+    for (const k of [...url.searchParams.keys()]) if (SECRET_PARAM.test(k)) url.searchParams.set(k, "(set)");
+    return url.toString().replace(/%28set%29/g, "(set)");
+  } catch {
+    return u.split("?")[0];
+  }
 }
 
 /** A config with nothing secret in it, for pages, logs and result files. */
@@ -62,6 +91,8 @@ export function publicConfig(cfg) {
   for (const [k, v] of Object.entries(cfg)) {
     if (["baseDir", "apiKeyFile"].includes(k)) continue;
     if (k === "headers") out.headers = Object.fromEntries(Object.keys(v || {}).map((h) => [h, "(set)"]));
+    else if (k === "query") out.query = Object.fromEntries(Object.entries(v || {}).map(([q, x]) => [q, SECRET_PARAM.test(q) ? "(set)" : x]));
+    else if (k === "url" || k === "baseUrl") out[k] = maskUrl(v);
     else if (k === "file") out.file = v ? basename(v) : "";
     else out[k] = v;
   }
