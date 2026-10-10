@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
-import { TRACKS, cleanPrompt, questionOf, stateOf, pickMove, STAY_TOLERANCE } from "../game/prompts.js";
+import { TRACKS, cleanPrompt, questionOf, stateOf, pickMove, expectedMove, STAY_TOLERANCE } from "../game/prompts.js";
 import { loadDecisions, RALLY, RALLY_QUICK } from "./suites.js";
 import { playRally, playArena } from "./matches.js";
 import { decisionMetrics, rallyMetrics, arenaMetrics, headline } from "./metrics.js";
@@ -45,6 +45,7 @@ export async function runBench({ connector, config, suites = ["decisions", "rall
                                   label = "", onEvent = () => {}, signal }) {
   const input = inputFor(track, prompt, tol);
   const started = new Date();
+  const before = { ...connector.stats };                       // the connector may have played before this run
   const rally = quick ? RALLY_QUICK : RALLY;
   const decisionsSuite = suites.includes("decisions") ? loadDecisions({ quick }) : null;
   const arenaPlan = { bots: arena.bots || ["medium", "hard"], maxSeconds: arena.maxSeconds ?? 150, game: arena.game || {} };
@@ -64,7 +65,9 @@ export async function runBench({ connector, config, suites = ["decisions", "rall
 
   if (decisionsSuite) {
     let done = 0, right = 0;
-    const items = decisionsSuite.items;
+    // the suite is frozen at tolerance 5; another tolerance is graded by its own rule (and kept off the leaderboard)
+    const items = tol === decisionsSuite.tolerance ? decisionsSuite.items
+      : decisionsSuite.items.map((it) => ({ ...it, rule: expectedMove(it.ds, tol) }));
     const records = await pool(items, concurrency, async (it) => {
       let rec;
       try {
@@ -117,7 +120,9 @@ export async function runBench({ connector, config, suites = ["decisions", "rall
 
   result.score = headline(result);
   result.seconds = Math.round((Date.now() - started.getTime()) / 100) / 10;
-  result.calls = { ...connector.stats };
+  const now = connector.stats;
+  result.calls = { calls: now.calls - before.calls, errors: now.errors - before.errors, inputTokens: now.inputTokens - before.inputTokens,
+                   outputTokens: now.outputTokens - before.outputTokens, lastError: now.errors > before.errors ? now.lastError : "" };
   onEvent({ type: "done", result });
   return { result, records: allRecords };
 }

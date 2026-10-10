@@ -3,22 +3,15 @@
 //   node tools/results-table.mjs
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { readScorecards } from "../src/bench/report.js";
+import { latestRuns, readScorecards } from "../src/bench/report.js";
 import { ROOT } from "../src/config.js";
 
 const cards = readScorecards(join(ROOT, "results"));
-const best = new Map();
-for (const c of cards) {
-  if (c.score == null) continue;
-  const k = `${c.model.name}|${c.track}|${c.quick ? "q" : "f"}`;
-  if (!best.has(k) || best.get(k).created < c.created) best.set(k, c);
-}
 const isModel = (c) => !["mock", "module"].includes(c.config?.connector);
-const byScore = (a, b) => b.score - a.score;
-const all = [...best.values()];
-const full = all.filter((c) => isModel(c) && !c.quick).sort(byScore);
-const quick = all.filter((c) => isModel(c) && c.quick).sort(byScore);
-const baselines = all.filter((c) => c.config?.connector === "mock" && !c.quick).sort(byScore);
+const all = latestRuns(cards, { allowQuick: true });             // the leaderboard's rules: comparable runs, the latest
+const full = all.filter((c) => isModel(c) && !c.quick);
+const quick = all.filter((c) => isModel(c) && c.quick);
+const baselines = all.filter((c) => c.config?.connector === "mock" && !c.quick);
 const pct = (v) => (v == null ? "–" : `${v}%`);
 const row = (c) => {
   const d = c.suites.decisions, r = c.suites.rally;

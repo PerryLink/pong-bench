@@ -35,7 +35,8 @@ export function decisionMetrics(items, records) {
   };
   const off = (it) => (it.ds.interceptY === null ? null : Math.abs(it.ds.interceptY - it.ds.paddle.y));
   const perMove = { up: by((it) => it.rule === "up"), down: by((it) => it.rule === "down"), stay: by((it) => it.rule === "stay") };
-  const macro = round((perMove.up.accuracy + perMove.down.accuracy + perMove.stay.accuracy) / 3, 2);
+  const share = (m) => (m.of ? m.right / m.of : 0);                         // from the counts, not the rounded percentages
+  const macro = round((100 * (share(perMove.up) + share(perMove.down) + share(perMove.stay))) / 3, 2);
   const confusion = Object.fromEntries(MOVES.map((r) => [r, Object.fromEntries([...MOVES, "error"].map((a) => [a, 0]))]));
   items.forEach((it, i) => { confusion[it.rule][records[i].error ? "error" : records[i].choice] += 1; });
 
@@ -46,7 +47,7 @@ export function decisionMetrics(items, records) {
     const bins = Array.from({ length: 10 }, () => ({ conf: 0, ok: 0, n: 0 }));
     items.forEach((it, i) => {
       const r = records[i];
-      if (r.error) return;
+      if (r.error || r.probSource === "one-hot") return;              // calibration only where the model gave probabilities
       const y = MOVES.map((m) => (m === it.rule ? 1 : 0));
       brier += r.probs.reduce((s, p, k) => s + (p - y[k]) ** 2, 0);
       nll += -Math.log(Math.max(1e-6, r.probs[MOVES.indexOf(it.rule)]));
@@ -56,7 +57,7 @@ export function decisionMetrics(items, records) {
     });
     const ece = bins.reduce((s, b) => s + (b.n ? (b.n / n) * Math.abs(b.ok / b.n - b.conf / b.n) : 0), 0);
     calibration = {
-      brier: round(brier / n, 4), log_loss: round(nll / n, 4), ece: round(ece, 4),
+      n, brier: round(brier / n, 4), log_loss: round(nll / n, 4), ece: round(ece, 4),
       by_confidence: bins.map((b, k) => ({ from: k / 10, to: (k + 1) / 10, n: b.n, accuracy: pct(b.ok, b.n) })).filter((b) => b.n),
     };
   }

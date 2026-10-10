@@ -1,6 +1,8 @@
 // Human-readable output: one scorecard per run, and the leaderboard over every scorecard in results/.
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { loadDecisions, RALLY, RALLY_QUICK } from "./suites.js";
+import { STAY_TOLERANCE, TRACKS } from "../game/prompts.js";
 
 const v = (x, unit = "") => (x === null || x === undefined ? "-" : `${x}${unit}`);
 const row = (cells) => `| ${cells.join(" | ")} |`;
@@ -59,16 +61,35 @@ export function readScorecards(dir) {
     .map((f) => { try { return JSON.parse(readFileSync(f, "utf8")); } catch { return null; } }).filter(Boolean);
 }
 
-export function renderLeaderboard(cards) {
-  const best = new Map();                                       // the best full (not quick) run per model and track
+let current = null;
+/** Can this run be compared with the others? A full run of a built-in track on today's suites, the plain top answer,
+ *  the official stay tolerance, and under 1% failed calls. (`quick: false` is not checked when allowQuick is set.) */
+export function comparable(c, { allowQuick = false } = {}) {
+  current ??= { decisions: loadDecisions().sha256, rally: RALLY.version, rallyQuick: RALLY_QUICK.version };
+  if (!c || c.score == null || (c.quick && !allowQuick)) return false;
+  if (!Object.hasOwn(TRACKS, c.track) || (c.stay_bias || 0) !== 0 || (c.tolerance ?? STAY_TOLERANCE) !== STAY_TOLERANCE) return false;
+  const rally = c.quick ? current.rallyQuick : current.rally;
+  if (c.versions?.decisions?.sha256 !== current.decisions || c.versions?.rally?.version !== rally) return false;
+  const calls = Number(c.calls?.calls) || 0, errors = Number(c.calls?.errors) || 0;
+  return calls > 0 && errors / calls <= 0.01;
+}
+
+/** The latest comparable run per model and track (the latest, not the best: re-running until lucky does not pay). */
+export function latestRuns(cards, opts) {
+  const latest = new Map();
   for (const c of cards) {
-    if (c.quick || c.score == null) continue;
-    const k = `${c.model.name}|${c.track}`;
-    if (!best.has(k) || best.get(k).score < c.score) best.set(k, c);
+    if (!comparable(c, opts)) continue;
+    const k = `${c.model.name}|${c.track}|${c.quick ? "quick" : "full"}`;
+    if (!latest.has(k) || String(latest.get(k).created) < String(c.created)) latest.set(k, c);
   }
-  const list = [...best.values()].sort((a, b) => b.score - a.score);
+  return [...latest.values()].sort((a, b) => b.score - a.score);
+}
+
+export function renderLeaderboard(cards) {
+  const list = latestRuns(cards);
   const lines = ["# PongBench leaderboard", "",
-    "Full runs only, the best per model and track. Score = mean of decision accuracy (macro) and rally rate; both are speed-independent.",
+    "The latest full run per model and track, on the current suites, with the plain top answer, the official stay tolerance and under 1% failed calls.",
+    "Score = mean of decision accuracy (macro) and rally rate; both are speed-independent.",
     "Latency depends on the machine and network it was measured on.", "",
     row(["#", "model", "track", "score", "decisions (macro)", "up", "down", "stay", "rally rate", "misses / 100 returns", "probabilities", "p50 latency", "run"]),
     row(Array(13).fill("---"))];
