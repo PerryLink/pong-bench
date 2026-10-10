@@ -1,0 +1,20 @@
+{
+ "version": "rally-v1",
+ "seeds": [
+  101,
+  102,
+  103,
+  104
+ ],
+ "decisions": 300,
+ "quick": {
+  "version": "rally-v1-quick",
+  "seeds": [
+   101,
+   102
+  ],
+  "decisions": 150
+ },
+ "engine": "engine.js (decisio v0.10.0 port)",
+ "tolerance": 5
+}
