@@ -7,7 +7,7 @@
   "engines": { "node": ">=18.17" },
   "bin": { "pongbench": "bin/pongbench.js" },
   "scripts": {
-    "start": "node bin/pongbench.js serve",
+    "start": "node bin/pongbench.js serve --open",
     "check": "node bin/pongbench.js check",
     "bench": "node bin/pongbench.js run",
     "configs": "node bin/pongbench.js configs",

@@ -3,7 +3,7 @@
 //
 //   node bin/pongbench.js check  --config <name>        four decisions: is the endpoint wired up right?
 //   node bin/pongbench.js run    --config <name> [...]  the benchmark; writes results/<run>/ and the leaderboard
-//   node bin/pongbench.js serve  [--config <name>]      the app (Play, Bot match, Watch, Bench, Prompt lab, Replays)
+//   node bin/pongbench.js serve  [--config <name>] [--open]  the app (Play, Bot match, Watch, Bench, Prompt lab, Replays)
 //   node bin/pongbench.js configs                       the endpoint configs and whether their keys are found
 //   node bin/pongbench.js suites [--build]              verify (or rebuild) the frozen test suites
 //   node bin/pongbench.js leaderboard                   rebuild results/LEADERBOARD.md
@@ -13,6 +13,8 @@ import { runBench, saveRun, inputFor, RESULTS_DIR, SUITES } from "../src/bench/r
 import { loadDecisions, writeSuites } from "../src/bench/suites.js";
 import { writeLeaderboard } from "../src/bench/report.js";
 import { TRACKS } from "../src/game/prompts.js";
+import { openBrowser } from "../src/open.js";
+import { join } from "node:path";
 
 const HELP = `PongBench: a game benchmark for decision models.
 
@@ -26,7 +28,8 @@ const HELP = `PongBench: a game benchmark for decision models.
          --bots medium,hard        arena opponents (easy, medium, hard, wall); --arena-seconds 150
          --stay-bias 0             take this off the model's p(stay) before picking (custom runs only)
          --label "<text>"          a note stored with the result; --no-save to skip writing results
-  serve  [--config <name>] [--port 8800] [--host 127.0.0.1]   the app, at http://127.0.0.1:8800
+  serve  [--config <name>] [--port 8800] [--host 127.0.0.1] [--open]   the app, at http://127.0.0.1:8800
+                                   (--open: also open it in the default browser)
   configs                          the configs in configs/ and whether their keys are found
   suites [--build]                 verify the frozen suites (or rebuild them)
   leaderboard                      rebuild results/LEADERBOARD.md from every scorecard
@@ -115,7 +118,7 @@ async function run(opts) {
   if (opts["no-save"]) return;
   const saved = saveRun({ result, records });
   writeLeaderboard(RESULTS_DIR);
-  console.log(`Saved ${saved.dir}\\scorecard.md (and the leaderboard: results/LEADERBOARD.md)`.replace(/\\/g, process.platform === "win32" ? "\\" : "/"));
+  console.log(`Saved ${join(saved.dir, "scorecard.md")} (and the leaderboard: ${join("results", "LEADERBOARD.md")})`);
 }
 
 function need(opts, k) {
@@ -124,12 +127,22 @@ function need(opts, k) {
 }
 
 async function main() {
+  const [major, minor] = process.versions.node.split(".").map(Number);
+  if (major < 18 || (major === 18 && minor < 17)) {
+    console.error(`PongBench needs Node.js 18.17 or newer (this is ${process.version}): https://nodejs.org`);
+    process.exit(1);
+  }
   loadEnv();
   const opts = args(process.argv.slice(2));
   const cmd = opts._[0];
   if (cmd === "check") return check(opts);
   if (cmd === "run") return run(opts);
-  if (cmd === "serve") return (await import("../src/server/server.js")).serve({ config: opts.config, port: Number(opts.port || 8800), host: opts.host || "127.0.0.1" });
+  if (cmd === "serve") {
+    const host = opts.host || "127.0.0.1";
+    const server = await (await import("../src/server/server.js")).serve({ config: opts.config, port: Number(opts.port || 8800), host });
+    if (opts.open) openBrowser(`http://${["0.0.0.0", "::"].includes(host) ? "127.0.0.1" : host}:${server.address().port}/`);
+    return server;
+  }
   if (cmd === "configs") {
     for (const c of listConfigs()) console.log(`  ${c.id.padEnd(22)} ${c.error ? `ERROR ${c.error}` : `${c.connector.padEnd(10)} ${String(c.model || c.policy || "").padEnd(28)} key ${c.key}`}`);
     return;
