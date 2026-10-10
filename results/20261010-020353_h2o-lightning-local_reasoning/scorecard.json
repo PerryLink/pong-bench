@@ -2,7 +2,7 @@
  "id": "20261010-020353_h2o-lightning-local_reasoning",
  "pongbench": "1.0.0",
  "created": "2026-10-10T02:03:53.077Z",
- "label": "laptop in quiet mode; latency not representative",
+ "label": "timing not published",
  "model": {
   "name": "H2O-Lightning-4B (local GPU)",
   "connector": "systemone",
@@ -16,7 +16,7 @@
   "model": "h2o-lightning-4b",
   "auth": "none",
   "concurrency": 1,
-  "note": "H2O-Lightning-4B served over System One on a laptop GPU (MXFP8 weights; 97% the same moves as the lossless build)",
+  "note": "H2O-Lightning-4B served over System One by a local server on a GPU (MXFP8 weights)",
   "id": "h2o-lightning-local",
   "file": "h2o-lightning-local.json",
   "key": "not needed"
@@ -174,12 +174,7 @@
    },
    "probabilities": "model",
    "errors": 0,
-   "latency_ms": {
-    "p50": 163.4,
-    "p95": 170.9,
-    "mean": 162.8,
-    "server_p50": 160.7
-   },
+   "latency_ms": null,
    "tokens": null
   },
   "rally": {
@@ -217,12 +212,7 @@
     }
    ],
    "errors": 0,
-   "latency_ms": {
-    "p50": 164.2,
-    "p95": 181.8,
-    "mean": 163.6,
-    "server_p50": 161.4
-   },
+   "latency_ms": null,
    "tokens": null
   }
  },
@@ -243,12 +233,13 @@
   }
  },
  "score": 49.4,
- "seconds": 343,
+ "seconds": null,
  "calls": {
   "calls": 2100,
   "errors": 0,
   "inputTokens": 0,
   "outputTokens": 0,
   "lastError": ""
- }
+ },
+ "timing": "not published"
 }

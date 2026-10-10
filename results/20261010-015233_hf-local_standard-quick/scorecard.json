@@ -2,15 +2,15 @@
  "id": "20261010-015233_hf-local_standard-quick",
  "pongbench": "1.0.0",
  "created": "2026-10-10T01:52:33.322Z",
- "label": "Qwen3.5-4B in bf16 on the CPU (laptop in quiet mode); one-token logprobs",
+ "label": "Qwen3.5-4B in bf16 on a CPU; one-token logprobs, thinking off; timing not published",
  "model": {
-  "name": "Open-weight model (examples/python/hf_server.py)",
+  "name": "Qwen3.5-4B (transformers server, CPU)",
   "connector": "openai",
-  "model": "local",
+  "model": "Qwen3.5-4B",
   "endpoint": "http://127.0.0.1:8001/v1/chat/completions"
  },
  "config": {
-  "name": "Open-weight model (examples/python/hf_server.py)",
+  "name": "Qwen3.5-4B (transformers server, CPU)",
   "connector": "openai",
   "baseUrl": "http://127.0.0.1:8001/v1",
   "model": "local",
@@ -176,12 +176,7 @@
    },
    "probabilities": "model",
    "errors": 0,
-   "latency_ms": {
-    "p50": 2443.1,
-    "p95": 7150.1,
-    "mean": 3012.1,
-    "server_p50": null
-   },
+   "latency_ms": null,
    "tokens": {
     "input": 107958,
     "output": 300,
@@ -211,12 +206,7 @@
     }
    ],
    "errors": 0,
-   "latency_ms": {
-    "p50": 2816.3,
-    "p95": 3775.2,
-    "mean": 2926,
-    "server_p50": null
-   },
+   "latency_ms": null,
    "tokens": {
     "input": 108116,
     "output": 300,
@@ -239,12 +229,13 @@
   }
  },
  "score": 30.4,
- "seconds": 1781.5,
+ "seconds": null,
  "calls": {
   "calls": 600,
   "errors": 0,
   "inputTokens": 216074,
   "outputTokens": 600,
   "lastError": ""
- }
+ },
+ "timing": "not published"
 }

@@ -212,7 +212,7 @@ export class Bench {
         <div class="kv">${Object.entries(d.bands || {}).map(([k, b]) => `<span>move needed, ${esc(k)} off centre</span><b>${acc(b)}</b>`).join("")}
         <span>up to the top edge</span><b>${acc(d.edges?.top)}</b><span>down to the bottom edge</span><b>${acc(d.edges?.bottom)}</b>
         <span>probabilities</span><b>${d.calibration ? `the model's own (Brier ${n(d.calibration.brier)}, ECE ${n(d.calibration.ece)})` : "one answer only"}</b>
-        <span>latency</span><b>p50 ${n(d.latency_ms?.p50)} ms, p95 ${n(d.latency_ms?.p95)} ms${d.tokens ? `, ${n(d.tokens.per_decision_input)} input tokens per decision` : ""}</b></div>` : ""}
+        <span>latency</span><b>${d.latency_ms ? `p50 ${n(d.latency_ms.p50)} ms, p95 ${n(d.latency_ms.p95)} ms` : "not published"}${d.tokens ? `, ${n(d.tokens.per_decision_input)} input tokens per decision` : ""}</b></div>` : ""}
       ${ra ? `<div class="kv"><span>rally rate</span><b>${esc(pct(ra.rally_rate))} (${n(ra.returns)} returns, ${n(ra.misses)} misses, longest rally ${n(ra.longest_rally)})</b></div>` : ""}
       ${ar ? `<div class="kv"><span>arena</span><b>${esc(pct(ar.points_won))} of points won: ${(Array.isArray(ar.games) ? ar.games : []).map((g) => `${esc(g.bot)} ${esc(g.score)}`).join(", ")}</b></div>` : ""}`;
   }

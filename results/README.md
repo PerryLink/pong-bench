@@ -14,9 +14,10 @@ and where from (latency depends on it).
 | Model | Where it ran | Measured from |
 |---|---|---|
 | Jev (TypeSafe), `jev-latest` | TypeSafe's hosted API ([`configs/typesafe-jev.json`](../configs/typesafe-jev.json)), 8 requests in flight | India |
-| H2O-Lightning-4B | a local System One server (not part of this repository) on a laptop GPU, MXFP8 weights, one request at a time | the same laptop, in its quiet power mode |
-| Qwen3.5-4B | [`examples/python/hf_server.py`](../examples/python/hf_server.py) in bf16 on the laptop's CPU, with [`configs/hf-local.json`](../configs/hf-local.json) (one-token logprobs, thinking off) | the same laptop |
+| H2O-Lightning-4B | a local System One server (not part of this repository) on a GPU, MXFP8 weights, one request at a time | timing not published |
+| Qwen3.5-4B | [`examples/python/hf_server.py`](../examples/python/hf_server.py) in bf16 on a CPU, with [`configs/hf-local.json`](../configs/hf-local.json) (one-token logprobs, thinking off) | timing not published |
 | baselines | the `mock` connector, in process | |
 
-The laptop was in its quiet power mode for every local run, so local latencies are slower than the hardware can do.
-Scores do not depend on speed.
+Scores do not depend on speed. To publish a result without its timing, run
+`node tools/strip-timing.mjs <run-id> [--label "..."] [--note "..."]`: it removes latency, decisions per second, the
+run's duration and every per-decision time, and leaves the score as it was.

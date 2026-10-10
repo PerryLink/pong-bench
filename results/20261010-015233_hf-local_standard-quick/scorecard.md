@@ -1,8 +1,8 @@
-# PongBench scorecard: Open-weight model (examples/python/hf_server.py)
+# PongBench scorecard: Qwen3.5-4B (transformers server, CPU)
 
-- Model: `local` via the openai connector (http://127.0.0.1:8001/v1/chat/completions)
+- Model: `Qwen3.5-4B` via the openai connector (http://127.0.0.1:8001/v1/chat/completions)
 - Track: standard (Standard), quick run; tolerance 5; stay handicap off
-- Run: 2026-10-10T01:52:33.322Z, 1781.5 s, 600 calls, 0 errors; PongBench 1.0.0
+- Run: 2026-10-10T01:52:33.322Z, timing not published, 600 calls, 0 errors; PongBench 1.0.0
 
 ## PongBench score: 30.4
 
@@ -39,7 +39,7 @@ Confusion (rows: the rule; columns: the answer):
 
 Calibration (the model's own probabilities): Brier 0.6623, log loss 1.1021, ECE 0.2502.
 
-Latency: p50 2443.1 ms, p95 7150.1 ms; 360 input tokens per decision; 0 errors.
+Latency: not published for this run; 360 input tokens per decision; 0 errors.
 
 ## Rally (lockstep against the wall)
 

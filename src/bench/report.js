@@ -7,13 +7,29 @@ import { STAY_TOLERANCE, TRACKS } from "../game/prompts.js";
 const v = (x, unit = "") => (x === null || x === undefined ? "-" : `${x}${unit}`);
 const row = (cells) => `| ${cells.join(" | ")} |`;
 
+/** A scorecard without timing: for runs measured on hardware you would rather not report on. Scores do not change
+ *  (they never depend on speed); latency, decisions per second and the run's duration become null. */
+export function stripTiming(card) {
+  const suites = Object.fromEntries(Object.entries(card.suites || {}).map(([k, s]) => [k, s && {
+    ...s, latency_ms: s.latency_ms === undefined ? undefined : null,
+    ...(Array.isArray(s.games) ? { games: s.games.map((g) => ({ ...g, decisions_per_s: null, reaction_p50_ms: null })) } : {}),
+  }]));
+  return { ...card, suites, seconds: null, timing: "not published" };
+}
+
+/** One saved decision record without its timing. */
+export function stripRecordTiming(rec) {
+  const { ms, serverMs, t, ...rest } = rec;
+  return rest;
+}
+
 export function renderScorecard(r) {
   const d = r.suites.decisions, ra = r.suites.rally, ar = r.suites.arena;
   const lines = [
     `# PongBench scorecard: ${r.model.name}`, "",
     `- Model: \`${r.model.model || "-"}\` via the ${r.model.connector} connector (${r.model.endpoint})`,
     `- Track: ${r.track} (${r.prompt.name})${r.quick ? ", quick run" : ""}; tolerance ${r.tolerance}; stay handicap ${r.stay_bias || "off"}`,
-    `- Run: ${r.created}, ${r.seconds} s, ${r.calls?.calls ?? "?"} calls, ${r.calls?.errors ?? 0} errors; PongBench ${r.pongbench}`, "",
+    `- Run: ${r.created}, ${r.timing === "not published" ? "timing not published" : v(r.seconds, " s")}, ${r.calls?.calls ?? "?"} calls, ${r.calls?.errors ?? 0} errors; PongBench ${r.pongbench}`, "",
     `## PongBench score: ${v(r.score)}`, "",
     "The mean of decision accuracy (macro over up, down and stay) and rally rate. Both are independent of speed.", "",
   ];
@@ -32,7 +48,7 @@ export function renderScorecard(r) {
     lines.push(d.calibration
       ? `Calibration (the model's own probabilities): Brier ${d.calibration.brier}, log loss ${d.calibration.log_loss}, ECE ${d.calibration.ece}.`
       : "Calibration: not measured (the endpoint returns one answer, no probabilities).", "",
-      `Latency: p50 ${v(d.latency_ms.p50, " ms")}, p95 ${v(d.latency_ms.p95, " ms")}${d.tokens ? `; ${d.tokens.per_decision_input} input tokens per decision` : ""}; ${d.errors} errors.`, "");
+      `${d.latency_ms ? `Latency: p50 ${v(d.latency_ms.p50, " ms")}, p95 ${v(d.latency_ms.p95, " ms")}` : "Latency: not published for this run"}${d.tokens ? `; ${d.tokens.per_decision_input} input tokens per decision` : ""}; ${d.errors} errors.`, "");
   }
   if (ra) {
     lines.push("## Rally (lockstep against the wall)", "",
@@ -97,7 +113,7 @@ export function renderLeaderboard(cards) {
     const d = c.suites.decisions, r = c.suites.rally;
     lines.push(row([i + 1, c.model.name, c.track, `**${c.score}**`, v(d?.macro_accuracy, "%"), v(d?.per_move.up.accuracy, "%"),
       v(d?.per_move.down.accuracy, "%"), v(d?.per_move.stay.accuracy, "%"), v(r?.rally_rate, "%"), v(r?.misses_per_100_returns),
-      d?.calibration ? "model" : "one-hot", v(d?.latency_ms.p50, " ms"), `[${c.id}](${c.id}/scorecard.md)`]));
+      d?.calibration ? "model" : "one-hot", v(d?.latency_ms?.p50, " ms"), `[${c.id}](${c.id}/scorecard.md)`]));
   });
   if (!list.length) lines.push("", "No full runs yet.");
   return `${lines.join("\n")}\n`;
