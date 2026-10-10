@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
 """Serve any Hugging Face causal language model as a decision endpoint, with real probabilities.
 
-  pip install torch transformers
-  python examples/python/hf_server.py --model Qwen/Qwen3-4B-Instruct-2507 [--port 8001] [--device cuda] [--dtype bfloat16]
+  pip install torch transformers            (python3 / pip3 on macOS and Linux)
+  python examples/python/hf_server.py --model Qwen/Qwen3-4B-Instruct-2507 [--port 8001] [--device cuda|mps|cpu] [--dtype bfloat16]
+
+The device defaults to the best one there is: an NVIDIA GPU (cuda), an Apple-silicon GPU (mps), or the CPU.
 
 Two routes, so PongBench (or anything else) can use either connector:
 
@@ -153,14 +156,19 @@ def main() -> None:
     ap.add_argument("--model", required=True, help="a Hugging Face model id or a local folder")
     ap.add_argument("--port", type=int, default=8001)
     ap.add_argument("--host", default="127.0.0.1")
-    ap.add_argument("--device", default="cuda", help="cuda, cpu, or auto (spread across GPU and CPU)")
+    ap.add_argument("--device", default=None,
+                    help="cuda (NVIDIA), mps (Apple silicon), cpu, or auto (spread across GPU and CPU); default: the best there is")
     ap.add_argument("--dtype", default="bfloat16")
     ap.add_argument("--max-gpu-gib", type=float, default=None, help="cap GPU memory and put the rest of the model in RAM")
     ap.add_argument("--pure-torch", action="store_true",
-                    help="ignore optional kernel packages (fla, causal_conv1d): needed on CPU, implied by --device cpu")
+                    help="ignore optional kernel packages (fla, causal_conv1d): implied by --device cpu or mps")
     args = ap.parse_args()
-    if args.pure_torch or args.device == "cpu":
-        for mod in ("fla", "causal_conv1d"):        # their Triton kernels cannot run on CPU tensors
+    if args.device is None:
+        import torch
+        mps = getattr(torch.backends, "mps", None)
+        args.device = "cuda" if torch.cuda.is_available() else "mps" if mps and mps.is_available() else "cpu"
+    if args.pure_torch or args.device in ("cpu", "mps"):
+        for mod in ("fla", "causal_conv1d"):        # their Triton kernels run on NVIDIA GPUs only
             sys.modules[mod] = None
     print(f"loading {args.model} ...", flush=True)
     model = Model(args.model, args.device, args.dtype, args.max_gpu_gib)

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """A System One endpoint in plain Python (standard library only): put your model behind decide() and PongBench (or any
 System One client) can call it.
 
