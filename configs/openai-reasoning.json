@@ -1,0 +1,16 @@
+{
+  "name": "OpenAI reasoning model",
+  "connector": "openai",
+  "baseUrl": "https://api.openai.com/v1",
+  "model": "gpt-5-mini",
+  "apiKeyEnv": "OPENAI_API_KEY",
+  "answer": "text",
+  "temperature": null,
+  "maxTokens": 2000,
+  "maxTokensField": "max_completion_tokens",
+  "extraBody": {
+    "reasoning_effort": "low"
+  },
+  "concurrency": 8,
+  "note": "reasoning models take no temperature or logprobs: text answers, one-hot"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Custom JavaScript player",
+  "connector": "module",
+  "path": "../examples/custom-connector.mjs",
+  "options": {
+    "tolerance": 5
+  },
+  "note": "write create(options) -> {decide}; see examples/custom-connector.mjs"
+}

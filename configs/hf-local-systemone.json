@@ -1,0 +1,8 @@
+{
+  "name": "Open-weight model via System One (examples/python/hf_server.py)",
+  "connector": "systemone",
+  "url": "http://127.0.0.1:8001/v1/systemone",
+  "auth": "none",
+  "concurrency": 1,
+  "note": "the same transformers server, through its System One route: probabilities from the model's logits"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Random (baseline)",
+  "connector": "mock",
+  "policy": "random",
+  "seed": 7,
+  "note": "uniform over the three moves: the floor"
+}

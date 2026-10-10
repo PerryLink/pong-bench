@@ -1,0 +1,8 @@
+{
+  "name": "Noisy oracle 10% (baseline)",
+  "connector": "mock",
+  "policy": "noisy",
+  "errorRate": 0.1,
+  "seed": 7,
+  "note": "the rule's move, wrong 10% of the time"
+}

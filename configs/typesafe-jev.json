@@ -1,0 +1,9 @@
+{
+  "name": "Jev (TypeSafe)",
+  "connector": "systemone",
+  "url": "https://api.typesafe.ai/v1/systemone",
+  "model": "jev-latest",
+  "apiKeyEnv": "TYPESAFE_API_KEY",
+  "concurrency": 8,
+  "note": "TypeSafe's hosted System One model; $0.042 per million input tokens (models page, 2026-10)"
+}

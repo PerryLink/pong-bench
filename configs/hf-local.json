@@ -1,0 +1,10 @@
+{
+  "name": "Open-weight model (examples/python/hf_server.py)",
+  "connector": "openai",
+  "baseUrl": "http://127.0.0.1:8001/v1",
+  "model": "local",
+  "auth": "none",
+  "answer": "logprobs",
+  "concurrency": 1,
+  "note": "PongBench's transformers server: any Hugging Face causal LM, probabilities from its logits"
+}

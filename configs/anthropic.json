@@ -1,0 +1,8 @@
+{
+  "name": "Claude Opus 5.5",
+  "connector": "anthropic",
+  "model": "claude-opus-5-5",
+  "effort": "low",
+  "concurrency": 8,
+  "note": "npm install @anthropic-ai/sdk; the SDK finds ANTHROPIC_API_KEY or an `ant auth login` profile"
+}

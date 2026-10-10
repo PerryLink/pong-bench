@@ -1,0 +1,11 @@
+{
+  "name": "OpenJev on Databricks",
+  "connector": "systemone",
+  "url": "https://REPLACE_WORKSPACE_HOST/ai-gateway/typesafe/v1/systemone",
+  "model": "system.ai.openjev-qwen35-4b",
+  "auth": "basic",
+  "basicUser": "token",
+  "apiKeyEnv": "DATABRICKS_TOKEN",
+  "concurrency": 4,
+  "note": "Unity Gateway; HTTP Basic with token:<DATABRICKS_TOKEN>"
+}

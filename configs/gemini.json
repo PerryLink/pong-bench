@@ -1,0 +1,12 @@
+{
+  "name": "Gemini (OpenAI-compatible endpoint)",
+  "connector": "openai",
+  "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai",
+  "model": "gemini-2.5-flash",
+  "apiKeyEnv": "GEMINI_API_KEY",
+  "answer": "text",
+  "temperature": 0,
+  "maxTokens": 400,
+  "concurrency": 8,
+  "note": "text answers (one-hot)"
+}

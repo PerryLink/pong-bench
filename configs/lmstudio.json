@@ -1,0 +1,10 @@
+{
+  "name": "LM Studio",
+  "connector": "openai",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "model": "REPLACE_WITH_THE_LOADED_MODEL",
+  "auth": "none",
+  "answer": "auto",
+  "concurrency": 1,
+  "note": "LM Studio's local server"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "OpenRouter model",
+  "connector": "openai",
+  "baseUrl": "https://openrouter.ai/api/v1",
+  "model": "qwen/qwen3-8b",
+  "apiKeyEnv": "OPENROUTER_API_KEY",
+  "answer": "auto",
+  "extraBody": {
+    "provider": {
+      "require_parameters": true
+    }
+  },
+  "concurrency": 8,
+  "note": "any model on OpenRouter; logprobs where the provider supports them"
+}

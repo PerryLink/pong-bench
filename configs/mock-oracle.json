@@ -1,0 +1,6 @@
+{
+  "name": "Rule oracle (baseline)",
+  "connector": "mock",
+  "policy": "oracle",
+  "note": "always the rule's move: the ceiling"
+}

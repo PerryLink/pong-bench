@@ -1,0 +1,13 @@
+{
+  "name": "Azure OpenAI deployment",
+  "connector": "openai",
+  "baseUrl": "https://REPLACE_RESOURCE.openai.azure.com/openai/deployments/REPLACE_DEPLOYMENT",
+  "query": {
+    "api-version": "2024-10-21"
+  },
+  "auth": "api-key",
+  "apiKeyEnv": "AZURE_OPENAI_API_KEY",
+  "answer": "auto",
+  "concurrency": 8,
+  "note": "the deployment URL form; for the v1 form use baseUrl .../openai/v1 with \"model\" set to the deployment"
+}

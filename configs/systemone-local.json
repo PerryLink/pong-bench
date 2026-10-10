@@ -1,0 +1,8 @@
+{
+  "name": "Local System One server",
+  "connector": "systemone",
+  "url": "http://127.0.0.1:8000/v1/systemone",
+  "auth": "none",
+  "concurrency": 1,
+  "note": "any server that speaks POST /v1/systemone on your machine (examples/python/systemone_server.py, examples/mock-systemone-server.mjs, Ollajev, ...)"
+}

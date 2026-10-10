@@ -1,0 +1,9 @@
+{
+  "name": "Clef-flash (Cloudflare Workers AI)",
+  "connector": "systemone",
+  "url": "https://api.cloudflare.com/client/v4/accounts/REPLACE_ACCOUNT_ID/ai/run/@cf/cloudflare/clef-flash",
+  "model": "clef-flash",
+  "apiKeyEnv": "CLOUDFLARE_API_TOKEN",
+  "concurrency": 4,
+  "note": "System One compatible; the Workers AI {result} envelope is unwrapped"
+}

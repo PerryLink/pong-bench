@@ -1,0 +1,9 @@
+{
+  "name": "Ollama decision model",
+  "connector": "systemone",
+  "url": "http://127.0.0.1:11434/v1/systemone",
+  "model": "REPLACE_WITH_THE_PULLED_MODEL",
+  "auth": "none",
+  "concurrency": 1,
+  "note": "Ollama 0.35+ serves decision models over System One; set model to the one you pulled"
+}

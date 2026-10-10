@@ -1,0 +1,6 @@
+{
+  "name": "Always stay (baseline)",
+  "connector": "mock",
+  "policy": "stay",
+  "note": "never moves"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Hesitant oracle (baseline)",
+  "connector": "mock",
+  "policy": "hesitant",
+  "nearStay": 0.6,
+  "seed": 7,
+  "note": "the typical decision-model mistake: stays when the ball arrives just outside the tolerance"
+}
