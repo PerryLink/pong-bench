@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PongBench</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2306110d'/%3E%3Crect x='9' y='20' width='6' height='24' rx='3' fill='%23f2b84b'/%3E%3Crect x='49' y='20' width='6' height='24' rx='3' fill='%2334d3a6'/%3E%3Ccircle cx='32' cy='32' r='4.5' fill='%23f4fbf8'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="bar">
+    <div class="brand"><span class="mark" aria-hidden="true"></span>PongBench</div>
+    <div class="engine"><span id="dot" class="dot"></span><span id="modelName">connecting</span><span id="status" class="status"></span></div>
+    <nav class="tabs" role="tablist" aria-label="views">
+      <button role="tab" data-view="play" aria-selected="true">Play</button>
+      <button role="tab" data-view="bot" aria-selected="false">Bot match</button>
+      <button role="tab" data-view="watch" aria-selected="false">Watch</button>
+      <button role="tab" data-view="bench" aria-selected="false">Bench</button>
+      <button role="tab" data-view="lab" aria-selected="false">Prompt lab</button>
+      <button role="tab" data-view="replays" aria-selected="false">Replays</button>
+    </nav>
+    <button id="openSettings" class="icon-btn" aria-label="settings" aria-expanded="false" title="Settings (S)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h3M11 12h9M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+    </button>
+  </header>
+
+  <main id="viewGame" class="game">
+    <section class="stage">
+      <div class="scoreline">
+        <span id="leftName" class="side-name left">You</span>
+        <span id="modeLine" class="mode-line"></span>
+        <span id="rightName" class="side-name right">Model</span>
+      </div>
+      <div class="court-box" id="courtBox">
+        <canvas id="court" aria-label="Pong court"></canvas>
+        <div id="overlay" class="overlay" hidden>
+          <div class="card">
+            <h2 id="ovTitle"></h2>
+            <p id="ovText"></p>
+            <div id="ovStats" class="ov-stats"></div>
+            <div id="ovButtons" class="ov-buttons"></div>
+          </div>
+        </div>
+        <div id="toast" class="toast" hidden></div>
+      </div>
+      <div class="controls" id="controls"></div>
+    </section>
+
+    <aside class="hud" aria-label="live metrics">
+      <div class="panel decision">
+        <div class="row-between"><span class="label">Last decision</span><span id="dAge" class="faint"></span></div>
+        <div class="dmove"><span id="dArrow" class="arrow">·</span><span id="dMove">waiting</span><span id="dRule" class="rule"></span></div>
+        <div class="bars" id="dBars"></div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Speed</div>
+        <div class="grid3">
+          <div class="m"><b id="mRate">–</b><span>decisions/s</span></div>
+          <div class="m"><b id="mTrip">–</b><span>round trip p50</span></div>
+          <div class="m"><b id="mModel">–</b><span>endpoint p50</span></div>
+          <div class="m"><b id="mP95">–</b><span>round trip p95</span></div>
+          <div class="m"><b id="mWire">–</b><span>transport p50</span></div>
+          <div class="m"><b id="mReact">–</b><span>reaction p50</span></div>
+        </div>
+        <canvas id="spark" class="spark" aria-label="round trip and model time, last 120 decisions"></canvas>
+        <div class="legend"><span class="key-trip">round trip</span><span class="key-model">endpoint time</span><span id="mQueue" class="faint"></span></div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Quality</div>
+        <div class="grid3">
+          <div class="m"><b id="qMatch">–</b><span>matches the rule</span></div>
+          <div class="m"><b id="qConf">–</b><span>confidence p50</span></div>
+          <div class="m"><b id="qHeld">0</b><span>held (low conf.)</span></div>
+        </div>
+        <div class="per-move" id="qPer"></div>
+        <p id="qNote" class="note"></p>
+      </div>
+
+      <div class="panel">
+        <div class="label">Game</div>
+        <div class="grid3" id="gStats"></div>
+      </div>
+
+      <div class="panel system">
+        <div class="label">Endpoint</div>
+        <div class="sys" id="sys"></div>
+      </div>
+
+      <details class="panel view">
+        <summary><span class="label">What the model sees</span><span id="vTokens" class="faint"></span></summary>
+        <pre id="vState"></pre>
+      </details>
+    </aside>
+
+    <aside id="drawer" class="drawer" aria-label="settings" hidden>
+      <div class="drawer-head"><h2>Settings</h2><button id="closeSettings" class="icon-btn" aria-label="close settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div id="settingsBox" class="drawer-body"></div>
+      <div class="drawer-foot"><button id="resetSettings" class="ghost small" type="button">Reset to defaults</button></div>
+    </aside>
+  </main>
+
+  <main id="viewLab" class="lab" hidden>
+    <section class="lab-edit panel">
+      <div class="row-between"><h2>Prompt lab</h2><span id="labDirty" class="faint"></span></div>
+      <p class="sub">Everything the model reads each decision. Change it, check it on 300 fixed states, then apply it to the game or run it in the Bench tab.</p>
+      <div class="lab-row">
+        <label for="labBase">Start from</label>
+        <select id="labBase"></select>
+        <button id="labLoad" class="ghost small" type="button">Load</button>
+      </div>
+      <label class="field"><span>Name</span><input id="labName" maxlength="60" spellcheck="false"></label>
+      <label class="field"><span>Instructions <em class="faint">use {tol} for the stay tolerance</em></span><textarea id="labInstr" rows="6" spellcheck="false"></textarea></label>
+      <div class="crit">
+        <label class="field"><span>Answer "up" when</span><textarea id="labUp" rows="2" spellcheck="false"></textarea></label>
+        <label class="field"><span>Answer "down" when</span><textarea id="labDown" rows="2" spellcheck="false"></textarea></label>
+        <label class="field"><span>Answer "stay" when</span><textarea id="labStay" rows="2" spellcheck="false"></textarea></label>
+      </div>
+      <label class="field"><span>Context <em class="faint">optional, sent as "context" in the state</em></span><textarea id="labContext" rows="2" spellcheck="false"></textarea></label>
+      <div class="field"><span>State fields <em class="faint">paddle.y is always sent</em></span><div id="labFields" class="chips"></div></div>
+      <div class="lab-row"><span>Numbers</span><div class="seg" id="labDec" role="radiogroup" aria-label="number precision">
+        <button type="button" role="radio" data-v="1">1 decimal</button><button type="button" role="radio" data-v="0">Whole</button></div></div>
+      <div class="lab-actions">
+        <button id="labApply" type="button">Apply to the game</button>
+        <button id="labSave" class="ghost" type="button">Save as preset</button>
+        <button id="labDelete" class="ghost" type="button">Delete preset</button>
+        <button id="labRevert" class="ghost" type="button">Revert</button>
+      </div>
+      <p id="labMsg" class="sub" role="status"></p>
+    </section>
+    <section class="lab-side">
+      <div class="panel">
+        <div class="row-between"><span class="label">Size</span><span id="labTokens" class="faint"></span></div>
+        <p class="sub">Longer prompts cost more tokens and usually more time per decision. A check reports the input tokens the endpoint counts.</p>
+      </div>
+      <div class="panel">
+        <div class="row-between"><span class="label">Check this prompt</span><button id="labCheck" class="small" type="button">Run 300 states</button></div>
+        <p class="sub">The 300 states of a quick benchmark run (decisions-v1: 100 up, 100 down, 50 ball away, 50 covered), the same every time. The game pauses while it runs; it calls the endpoint 300 times.</p>
+        <div id="labResult" class="lab-result"></div>
+        <table class="checks"><thead><tr><th>Prompt</th><th>Tokens</th><th>Match</th><th>Up</th><th>Down</th><th>Stay</th><th>Endpoint p50</th></tr></thead><tbody id="labChecks"></tbody></table>
+      </div>
+      <div class="panel">
+        <div class="label">The request, exactly</div>
+        <pre id="labPreview" class="preview"></pre>
+      </div>
+    </section>
+  </main>
+
+  <main id="viewBench" class="bench" hidden>
+    <section class="bench-col">
+      <div class="panel">
+        <div class="row-between"><h2>Endpoint</h2><span id="bEndpointState" class="faint"></span></div>
+        <p class="sub">The model the app and the benchmark call. Configs live in <code>configs/</code>; keys come from environment variables or a <code>.env</code> file, never from the page.</p>
+        <div class="lab-row"><select id="bConfig" aria-label="endpoint config"></select><button id="bUse" class="ghost small" type="button">Use</button><button id="bCheck" class="small" type="button">Check (4 decisions)</button></div>
+        <div id="bConfigInfo" class="kv"></div>
+        <div id="bCheckOut" class="check-out"></div>
+      </div>
+      <div class="panel">
+        <h2>Run the benchmark</h2>
+        <p class="sub">The same runner as <code>node bin/pongbench.js run</code>. Results are saved in <code>results/</code> with a scorecard, and the leaderboard is rebuilt.</p>
+        <div class="field"><span>Suites</span><div class="chips" id="bSuites">
+          <button type="button" class="chip" data-v="decisions" aria-pressed="true" title="900 fixed decision states, speed-independent">Decisions (900)</button>
+          <button type="button" class="chip" data-v="rally" aria-pressed="true" title="lockstep matches against the wall, speed-independent">Rally (1,200)</button>
+          <button type="button" class="chip" data-v="arena" aria-pressed="false" title="real-time games against bots: depends on latency">Arena (real time)</button>
+        </div></div>
+        <div class="field"><span>Track <em class="faint">the prompt every decision is asked with</em></span><div class="seg" id="bTrack" role="radiogroup" aria-label="track">
+          <button type="button" role="radio" data-v="standard" aria-checked="true">Standard</button><button type="button" role="radio" data-v="compact">Compact</button>
+          <button type="button" role="radio" data-v="minimal">Minimal</button><button type="button" role="radio" data-v="reasoning">Reasoning</button>
+          <button type="button" role="radio" data-v="lab">The game's prompt</button></div></div>
+        <div class="lab-row"><span>Quick run</span><button id="bQuick" class="switch" role="switch" aria-checked="false" type="button" aria-label="quick run"></button>
+          <span class="faint">a third of each suite: for trying a setup, not for the leaderboard</span></div>
+        <div class="field"><span>Requests in flight <output id="bConcOut" class="set-val">4</output></span><input id="bConc" type="range" min="1" max="16" step="1" value="4"></div>
+        <div class="field" id="bArenaBox"><span>Arena bots</span><div class="chips" id="bBots">
+          <button type="button" class="chip" data-v="easy" aria-pressed="false">Easy</button><button type="button" class="chip" data-v="medium" aria-pressed="true">Medium</button>
+          <button type="button" class="chip" data-v="hard" aria-pressed="true">Hard</button><button type="button" class="chip" data-v="wall" aria-pressed="false">Perfect</button></div></div>
+        <div class="field"><span>Stay handicap <output id="bBiasOut" class="set-val">off</output> <em class="faint">off for official runs</em></span><input id="bBias" type="range" min="0" max="0.4" step="0.05" value="0"></div>
+        <label class="field"><span>Label <em class="faint">optional note stored with the result</em></span><input id="bLabel" maxlength="120" spellcheck="false"></label>
+        <p id="bEstimate" class="sub"></p>
+        <div class="lab-actions"><button id="bRun" type="button">Run benchmark</button><button id="bStop" class="ghost" type="button" disabled>Stop</button></div>
+      </div>
+    </section>
+    <section class="bench-col">
+      <div class="panel">
+        <div class="row-between"><h2>Progress</h2><span id="bClock" class="faint"></span></div>
+        <div id="bProgress" class="progress"></div>
+        <ol id="bLog" class="log"></ol>
+      </div>
+      <div class="panel" id="bCard"><div class="row-between"><h2>Scorecard</h2><a id="bCardLink" class="faint" target="_blank" rel="noopener"></a></div><div id="bCardBody" class="sub">Run the benchmark, or pick a run below.</div></div>
+      <div class="panel">
+        <div class="row-between"><h2>Runs</h2><a href="/results/LEADERBOARD.md" target="_blank" rel="noopener" class="faint">leaderboard</a></div>
+        <table class="checks"><thead><tr><th>When</th><th>Model</th><th>Track</th><th>Score</th><th>Decisions</th><th>Rally</th><th>Arena</th><th>p50</th></tr></thead><tbody id="bRuns"></tbody></table>
+      </div>
+    </section>
+  </main>
+
+  <main id="viewReplays" class="replays" hidden>
+    <div class="replay-top">
+      <button id="replayPlay" type="button">Play</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="replay time">
+      <span id="replayClock" class="clock">0.0 s</span>
+    </div>
+    <div id="lanes" class="lanes"></div>
+    <p class="sub" id="replayNote"></p>
+    <section class="panel">
+      <div class="row-between"><span class="label">Saved games</span><span class="faint">pong-lanes/games/, newest first</span></div>
+      <table class="checks"><thead><tr><th>When</th><th>Mode</th><th>Prompt</th><th>Result</th><th>Score</th><th>Decisions</th>
+        <th>Match</th><th>Round trip p50</th><th>Endpoint p50</th></tr></thead><tbody id="gamesBody"></tbody></table>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
