@@ -23,6 +23,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+MAX_BODY, MAX_QUESTIONS, MAX_KEYS = 1 << 20, 8, 16      # one request stays small: a web page cannot make it run for minutes
 SYSTEM = "You make one decision about the state given. Answer with the key of exactly one option, and nothing else."
 
 
@@ -97,6 +98,21 @@ class Model:
         return [(self.tok.decode([int(i)]), float(v)) for v, i in zip(vals, idx)], int(ids.shape[1])
 
 
+def check_questions(qs) -> None:
+    """Raise ValueError unless qs is a map of 1 to MAX_QUESTIONS questions, each with 1 to MAX_KEYS options."""
+    if not isinstance(qs, dict) or not 0 < len(qs) <= MAX_QUESTIONS:
+        raise ValueError(f"questions must be a map of 1 to {MAX_QUESTIONS} questions")
+    for name, q in qs.items():
+        if not isinstance(q, dict):
+            raise ValueError(f"question {name!r} must be an object")
+        typ = q.get("type", "choice")
+        if typ not in ("choice", "noul", "score"):
+            raise ValueError(f"question {name!r}: type must be choice, noul or score")
+        crit = q.get("criteria")
+        if typ != "noul" and (not isinstance(crit, (dict, list)) or not 0 < len(crit) <= MAX_KEYS):
+            raise ValueError(f"question {name!r} needs 1 to {MAX_KEYS} criteria")
+
+
 def systemone(model: Model, body: dict) -> dict:
     answers, used = {}, 0
     for name, q in body["questions"].items():
@@ -164,11 +180,17 @@ def main() -> None:
 
         def do_POST(self):  # noqa: N802
             try:
-                body = json.loads(self.rfile.read(int(self.headers.get("content-length", 0))) or b"{}")
+                if not (self.headers.get("content-type") or "").lower().startswith("application/json"):
+                    return self._send(415, {"error": "send JSON (content-type: application/json)"})
+                size = int(self.headers.get("content-length") or 0)
+                if not 0 <= size <= MAX_BODY:
+                    return self._send(413, {"error": f"a request is 0 to {MAX_BODY} bytes"})
+                body = json.loads(self.rfile.read(size) or b"{}")
+                if not isinstance(body, dict):
+                    raise ValueError("the body must be a JSON object")
                 route = self.path.rstrip("/")
                 if route.endswith("/v1/systemone"):
-                    if not isinstance(body.get("questions"), dict) or not body["questions"]:
-                        raise ValueError("questions must be a non-empty map")
+                    check_questions(body.get("questions"))
                 elif route.endswith("/chat/completions"):
                     if not isinstance(body.get("messages"), list):
                         raise ValueError("messages must be a list")

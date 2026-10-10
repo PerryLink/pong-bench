@@ -46,9 +46,14 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):  # noqa: N802
         if not self.path.rstrip("/").endswith("/v1/systemone"):
             return self._send(404, {"error": "POST /v1/systemone"})
+        size = int(self.headers.get("content-length") or 0)
+        if not 0 <= size <= 1 << 20:                      # keep requests small
+            return self._send(413, {"error": "a request is at most 1 MB"})
+        if not (self.headers.get("content-type") or "").lower().startswith("application/json"):
+            return self._send(415, {"error": "send JSON (content-type: application/json)"})
         try:
-            body = json.loads(self.rfile.read(int(self.headers.get("content-length", 0))) or b"{}")
-            if not isinstance(body.get("questions"), dict) or not body["questions"]:
+            body = json.loads(self.rfile.read(size) or b"{}")
+            if not isinstance(body, dict) or not isinstance(body.get("questions"), dict) or not body["questions"]:
                 return self._send(422, {"detail": [{"loc": ["body", "questions"], "msg": "a non-empty map of questions"}]})
             t0 = time.perf_counter()
             out = decide(body.get("state"), body["questions"])
