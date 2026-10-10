@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import { createServer, request } from "node:http";
 import { mkdtempSync, existsSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, relative } from "node:path";
 
 process.env.PONGBENCH_RESULTS = mkdtempSync(join(tmpdir(), "pongbench-results-"));
 process.env.PONGBENCH_DATA = mkdtempSync(join(tmpdir(), "pongbench-data-"));
@@ -384,6 +384,67 @@ await t("the app refuses other websites, foreign hosts, non-JSON bodies and conf
   assert.equal((await post("/api/bench/start", { suites: ["arena"], bots: ["<img src=x onerror=alert(1)>"] })).status, 400);
   assert.equal((await post("/api/bench/start", { suites: ["decisions"], track: "<b>" })).status, 400);
   server.close();
+});
+
+console.log("portability");
+await t("every import, page asset and doc link matches a file name exactly (Linux and macOS are case sensitive)", async () => {
+  const { ROOT } = await import("../src/config.js");
+  const exact = (abs) => {                                  // each path segment must be a real entry, same case
+    const parts = relative(ROOT, abs).split(/[\\/]/).filter(Boolean);
+    let dir = ROOT;
+    for (const part of parts) {
+      if (part === "..") { dir = dirname(dir); continue; }
+      if (!existsSync(dir) || !readdirSync(dir).includes(part)) return false;
+      dir = join(dir, part);
+    }
+    return true;
+  };
+  const walk = (d) => readdirSync(join(ROOT, d), { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]);
+  const web = (spec, from) => (spec.startsWith("/game/") ? join(ROOT, "src", spec.slice(1))
+    : spec.startsWith("/suites/") || spec.startsWith("/results/") ? join(ROOT, spec.slice(1))
+    : spec.startsWith("/") ? join(ROOT, "web", spec.slice(1)) : join(ROOT, dirname(from), spec));
+  const bad = [];
+  const code = ["src", "web", "bin", "tools", "tests", "examples"].flatMap(walk).filter((f) => /\.(m?js|html)$/.test(f));
+  for (const f of code) {
+    const text = readFileSync(join(ROOT, f), "utf8");
+    const specs = [...text.matchAll(/(?:from\s+|import\s*\(\s*)["']([./][^"']+)["']|(?:src|href)="(\/?[\w./-]+\.(?:js|css|png|svg|ico))"/g)]
+      .map((m) => m[1] || m[2]);
+    for (const s of specs) if (!exact(web(s, f))) bad.push(`${f}: ${s}`);
+  }
+  const docs = ["README.md", "AGENTS.md", "CONTRIBUTING.md", "CHANGELOG.md", ...walk("docs"), ...walk("prompts"),
+                "configs/README.md", "examples/README.md", "results/README.md", "suites/README.md"].filter((f) => f.endsWith(".md"));
+  for (const f of docs) {
+    const text = readFileSync(join(ROOT, f), "utf8");
+    for (const m of text.matchAll(/\]\(([^)#\s]+)(?:#[^)]*)?\)|src="([^"]+)"/g)) {
+      const link = m[1] || m[2];
+      if (!/^(https?:|mailto:)/.test(link) && !exact(join(ROOT, dirname(f), link))) bad.push(`${f}: ${link}`);
+    }
+  }
+  assert.deepEqual(bad, [], `not found with this exact case:\n${bad.join("\n")}`);
+});
+
+await t("--open uses the platform's own way to open a page", async () => {
+  const { openCommand } = await import("../src/open.js");
+  const url = "http://127.0.0.1:8800/";
+  assert.deepEqual(openCommand(url, "darwin"), ["open", [url]]);
+  assert.deepEqual(openCommand(url, "linux"), ["xdg-open", [url]]);
+  assert.deepEqual(openCommand(url, "win32"), ["cmd", ["/c", "start", '""', url]]);
+});
+
+await t("a run can drop its timing (latency stays private), and every report still renders", async () => {
+  const { stripTiming, stripRecordTiming, renderScorecard } = await import("../src/bench/report.js");
+  const cfg = checkConfig({ connector: "mock", policy: "oracle" }, "oracle.json");
+  const out = await runBench({ connector: await connect(cfg), config: cfg });
+  const card = stripTiming({ ...out.result, id: "x" });
+  const records = out.records.map(stripRecordTiming);
+  assert.equal(card.suites.decisions.latency_ms, null);
+  assert.equal(card.suites.rally.latency_ms, null);
+  assert.equal(card.seconds, null);
+  assert.ok(records.every((r) => !("ms" in r) && !("serverMs" in r) && !("t" in r)));
+  assert.equal(card.score, out.result.score);
+  assert.ok(renderScorecard(card).includes("PongBench score"));
+  assert.ok(renderLeaderboard([card]).includes("| -"));
 });
 
 console.log(process.exitCode ? "\nSOME CHECKS FAILED" : `\nall ${passed} checks passed`);
