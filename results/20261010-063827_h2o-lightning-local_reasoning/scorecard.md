@@ -2,7 +2,7 @@
 
 - Model: `h2o-lightning-4b` via the systemone connector (http://127.0.0.1:8798/v1/systemone)
 - Track: reasoning (Reasoning); tolerance 5; stay handicap off
-- Run: 2026-10-10T02:03:53.077Z, timing not published, 2100 calls, 0 errors; PongBench 1.0.0
+- Run: 2026-10-10T06:38:27.771Z, 79.2 s, 2100 calls, 0 errors; PongBench 1.0.0
 
 ## PongBench score: 49.4
 
@@ -39,7 +39,7 @@ Confusion (rows: the rule; columns: the answer):
 
 Calibration (the model's own probabilities): Brier 0.5627, log loss 0.9462, ECE 0.1103.
 
-Latency: not published for this run; 0 errors.
+Latency: p50 36.7 ms, p95 40.8 ms; 0 errors.
 
 ## Rally (lockstep against the wall)
 

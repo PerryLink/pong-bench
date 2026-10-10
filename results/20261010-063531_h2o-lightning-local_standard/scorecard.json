@@ -1,8 +1,8 @@
 {
- "id": "20261010-015420_h2o-lightning-local_standard",
+ "id": "20261010-063531_h2o-lightning-local_standard",
  "pongbench": "1.0.0",
- "created": "2026-10-10T01:54:20.262Z",
- "label": "timing not published",
+ "created": "2026-10-10T06:35:31.355Z",
+ "label": "laptop GPU in its maximum (manual) power mode",
  "model": {
   "name": "H2O-Lightning-4B (local GPU)",
   "connector": "systemone",
@@ -16,7 +16,7 @@
   "model": "h2o-lightning-4b",
   "auth": "none",
   "concurrency": 1,
-  "note": "H2O-Lightning-4B served over System One by a local server on a GPU (MXFP8 weights)",
+  "note": "H2O-Lightning-4B served over System One by a local server on a laptop GPU (MXFP8 weights)",
   "id": "h2o-lightning-local",
   "file": "h2o-lightning-local.json",
   "key": "not needed"
@@ -181,7 +181,12 @@
    },
    "probabilities": "model",
    "errors": 0,
-   "latency_ms": null,
+   "latency_ms": {
+    "p50": 36.5,
+    "p95": 40.4,
+    "mean": 37,
+    "server_p50": 34.2
+   },
    "tokens": null
   },
   "rally": {
@@ -219,7 +224,12 @@
     }
    ],
    "errors": 0,
-   "latency_ms": null,
+   "latency_ms": {
+    "p50": 36.5,
+    "p95": 40,
+    "mean": 36.7,
+    "server_p50": 34.3
+   },
    "tokens": null
   }
  },
@@ -240,13 +250,12 @@
   }
  },
  "score": 84.7,
- "seconds": null,
+ "seconds": 77.4,
  "calls": {
   "calls": 2100,
   "errors": 0,
   "inputTokens": 0,
   "outputTokens": 0,
   "lastError": ""
- },
- "timing": "not published"
+ }
 }

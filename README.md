@@ -31,7 +31,7 @@ point at any model, hosted or local, and a game you can play against it.
 
 ## Results
 
-Runs from 2026-10-10, full runs unless marked quick. Score = (decisions macro accuracy + rally rate) / 2.
+Full runs from 2026-10-10. Score = (decisions macro accuracy + rally rate) / 2.
 
 <!-- results:start -->
 | Model | Track | Score | Decisions (macro) | up | down | stay | Rally rate | Misses | Probabilities | p50 latency |
@@ -39,12 +39,11 @@ Runs from 2026-10-10, full runs unless marked quick. Score = (decisions macro ac
 | Jev (TypeSafe) | compact | **99.8** | 99.67% | 100% | 100% | 99% | 100% | 0 | yes | 330.1 ms |
 | Jev (TypeSafe) | minimal | **98.9** | 97.78% | 100% | 100% | 93.3% | 100% | 0 | yes | 330.2 ms |
 | Jev (TypeSafe) | standard | **98.6** | 97.22% | 99.3% | 92.7% | 99.7% | 100% | 0 | yes | 330 ms |
-| H2O-Lightning-4B (local GPU) | compact | **95.8** | 91.67% | 81.3% | 94.7% | 99% | 100% | 0 | yes | – |
+| H2O-Lightning-4B (local GPU) | compact | **95.8** | 91.67% | 81.3% | 94.7% | 99% | 100% | 0 | yes | 27.4 ms |
 | Jev (TypeSafe) | reasoning | **85.3** | 79% | 75% | 72.7% | 89.3% | 91.5% | 7 | yes | 329.7 ms |
-| H2O-Lightning-4B (local GPU) | standard | **84.7** | 80.44% | 76.3% | 76% | 89% | 89% | 9 | yes | – |
-| H2O-Lightning-4B (local GPU) | minimal | **72.3** | 78.22% | 47.3% | 100% | 87.3% | 66.3% | 34 | yes | – |
-| H2O-Lightning-4B (local GPU) | reasoning | **49.4** | 48.44% | 27% | 24.7% | 93.7% | 50.4% | 60 | yes | – |
-| Qwen3.5-4B (transformers server, CPU) | standard (quick) | **30.4** | 38% | 31% | 0% | 83% | 22.7% | 34 | yes | – |
+| H2O-Lightning-4B (local GPU) | standard | **84.7** | 80.44% | 76.3% | 76% | 89% | 89% | 9 | yes | 36.5 ms |
+| H2O-Lightning-4B (local GPU) | minimal | **72.3** | 78.22% | 47.3% | 100% | 87.3% | 66.3% | 34 | yes | 19.8 ms |
+| H2O-Lightning-4B (local GPU) | reasoning | **49.4** | 48.44% | 27% | 24.7% | 93.7% | 50.4% | 60 | yes | 36.7 ms |
 | *Rule oracle (baseline)* | standard | **100** | 100% | 100% | 100% | 100% | 100% | 0 | yes | – |
 | *Hesitant oracle (baseline)* | standard | **94** | 88% | 82.7% | 81.3% | 100% | 100% | 0 | yes | – |
 | *Noisy oracle 10% (baseline)* | standard | **91.9** | 91.22% | 91.7% | 90.7% | 91.3% | 92.6% | 6 | yes | – |
@@ -61,18 +60,16 @@ What stands out:
   compact one (72.3 with the one-line minimal prompt): small models care a lot about how the question is put.
 - **The reasoning track separates models.** Without `interceptY` the model has to work out the bounce from the ball's
   position and velocity. Jev drops to 85.3; H2O-Lightning to 49.4, because it falls back to `stay` most of the time.
-- **Qwen3.5-4B** is a general chat model with no decision training, run through the bundled transformers server
-  (bf16 on a CPU, thinking off, one-token answers). It lands at 30.4 on a quick run, about where random play
-  does. It never once answered `down`: when `down` was right it said `up` 65 times out of 100, as if y grew upward,
-  although the prompt says the opposite. A full run on a CPU takes about 90 minutes, so this one is a quick run.
+- **Speed never leaks into the score.** H2O-Lightning was run twice, with the laptop in its quiet and then its
+  maximum power mode: all 8,400 decisions came out identical, and only the latency changed.
 - *Italic* rows are scripted baselines that mark the range: a perfect player, a "hesitant" one that makes the typical
   decision-model mistake, 10% noise, random, and a paddle that never moves.
 
 Every run has a scorecard in [`results/`](results/) (per move, per distance band, the court edges, a confusion matrix,
 calibration, latency, tokens) and the leaderboard is [`results/LEADERBOARD.md`](results/LEADERBOARD.md). Jev's latency
-was measured from India to TypeSafe's API, so it is mostly network. The local runs publish no timing (their scorecards
-say so, and `tools/strip-timing.mjs` does the same for yours): scores never depend on speed, and a latency only means
-something next to the exact machine it came from.
+was measured from India to TypeSafe's API, so it is mostly network. H2O-Lightning ran on a laptop GPU in its maximum
+power mode, one request at a time. Scores never depend on speed; a latency only means something next to the machine it
+came from (to publish a run without its timing, use `tools/strip-timing.mjs`).
 
 ## Quick start
 

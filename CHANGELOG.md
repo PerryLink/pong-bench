@@ -18,4 +18,4 @@ First release.
 - The app refuses requests from other websites (Host, Origin and content-type checks; WebSockets too), picks configs by
   name only, and never shows a key: keys must be one printable line, are redacted from provider errors, and key-like URL
   parameters are masked wherever a config is shown or saved.
-- Reference results: baselines, Jev (TypeSafe) and H2O-Lightning-4B on all four tracks, Qwen3.5-4B (quick run).
+- Reference results: baselines, Jev (TypeSafe) and H2O-Lightning-4B on all four tracks.

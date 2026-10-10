@@ -14,8 +14,7 @@ and where from (latency depends on it).
 | Model | Where it ran | Measured from |
 |---|---|---|
 | Jev (TypeSafe), `jev-latest` | TypeSafe's hosted API ([`configs/typesafe-jev.json`](../configs/typesafe-jev.json)), 8 requests in flight | India |
-| H2O-Lightning-4B | a local System One server (not part of this repository) on a GPU, MXFP8 weights, one request at a time | timing not published |
-| Qwen3.5-4B | [`examples/python/hf_server.py`](../examples/python/hf_server.py) in bf16 on a CPU, with [`configs/hf-local.json`](../configs/hf-local.json) (one-token logprobs, thinking off) | timing not published |
+| H2O-Lightning-4B | a local System One server (not part of this repository) on a laptop GPU, MXFP8 weights, one request at a time | the same laptop, in its maximum (manual) power mode |
 | baselines | the `mock` connector, in process | |
 
 Scores do not depend on speed. To publish a result without its timing, run

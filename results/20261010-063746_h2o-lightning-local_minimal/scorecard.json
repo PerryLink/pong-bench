@@ -1,8 +1,8 @@
 {
- "id": "20261010-020011_h2o-lightning-local_compact",
+ "id": "20261010-063746_h2o-lightning-local_minimal",
  "pongbench": "1.0.0",
- "created": "2026-10-10T02:00:11.429Z",
- "label": "timing not published",
+ "created": "2026-10-10T06:37:46.602Z",
+ "label": "laptop GPU in its maximum (manual) power mode",
  "model": {
   "name": "H2O-Lightning-4B (local GPU)",
   "connector": "systemone",
@@ -16,26 +16,25 @@
   "model": "h2o-lightning-4b",
   "auth": "none",
   "concurrency": 1,
-  "note": "H2O-Lightning-4B served over System One by a local server on a GPU (MXFP8 weights)",
+  "note": "H2O-Lightning-4B served over System One by a local server on a laptop GPU (MXFP8 weights)",
   "id": "h2o-lightning-local",
   "file": "h2o-lightning-local.json",
   "key": "not needed"
  },
- "track": "compact",
+ "track": "minimal",
  "prompt": {
-  "name": "Compact",
+  "name": "Minimal",
   "builtin": true,
-  "note": "the same rule in about half the words, and only the fields the rule needs",
-  "instructions": "Pong: you move the right paddle. y = 0 is the top edge and y grows downward. interceptY is where the ball will reach your paddle (null when the ball moves away). Compare interceptY with paddle.y and answer with one move (within {tol} units counts as covered).",
+  "note": "one line of instructions and bare comparisons: how much does the model need to be told?",
+  "instructions": "Right Pong paddle. y grows downward.",
   "criteria": {
-   "up": "interceptY < paddle.y - {tol}: the ball will arrive above the paddle.",
-   "down": "interceptY > paddle.y + {tol}: the ball will arrive below the paddle.",
-   "stay": "interceptY is null, or within {tol} units of paddle.y."
+   "up": "interceptY < paddle.y - {tol}",
+   "down": "interceptY > paddle.y + {tol}",
+   "stay": "otherwise, or interceptY is null"
   },
   "context": "",
   "fields": [
-   "intercept",
-   "dir"
+   "intercept"
   ],
   "decimals": 1
  },
@@ -45,23 +44,23 @@
  "concurrency": 1,
  "suites": {
   "decisions": {
-   "macro_accuracy": 91.67,
-   "accuracy": 91.7,
+   "macro_accuracy": 78.22,
+   "accuracy": 78.2,
    "per_move": {
     "up": {
-     "right": 244,
+     "right": 142,
      "of": 300,
-     "accuracy": 81.3
+     "accuracy": 47.3
     },
     "down": {
-     "right": 284,
+     "right": 300,
      "of": 300,
-     "accuracy": 94.7
+     "accuracy": 100
     },
     "stay": {
-     "right": 297,
+     "right": 262,
      "of": 300,
-     "accuracy": 99
+     "accuracy": 87.3
     }
    },
    "per_kind": {
@@ -71,33 +70,33 @@
      "accuracy": 100
     },
     "covered": {
-     "right": 147,
+     "right": 112,
      "of": 150,
-     "accuracy": 98
+     "accuracy": 74.7
     }
    },
    "bands": {
     "5-8": {
-     "right": 37,
+     "right": 45,
      "of": 91,
-     "accuracy": 40.7
+     "accuracy": 49.5
     },
     "8-12": {
-     "right": 89,
+     "right": 61,
      "of": 96,
-     "accuracy": 92.7
+     "accuracy": 63.5
     },
     "12+": {
-     "right": 402,
+     "right": 336,
      "of": 413,
-     "accuracy": 97.3
+     "accuracy": 81.4
     }
    },
    "edges": {
     "top": {
-     "right": 27,
+     "right": 21,
      "of": 37,
-     "accuracy": 73
+     "accuracy": 56.8
     },
     "bottom": {
      "right": 16,
@@ -107,109 +106,125 @@
    },
    "confusion": {
     "up": {
-     "up": 244,
+     "up": 142,
      "down": 0,
-     "stay": 56,
+     "stay": 158,
      "error": 0
     },
     "down": {
      "up": 0,
-     "down": 284,
-     "stay": 16,
+     "down": 300,
+     "stay": 0,
      "error": 0
     },
     "stay": {
      "up": 0,
-     "down": 3,
-     "stay": 297,
+     "down": 38,
+     "stay": 262,
      "error": 0
     }
    },
    "calibration": {
     "n": 900,
-    "brier": 0.2199,
-    "log_loss": 0.4392,
-    "ece": 0.2343,
+    "brier": 0.267,
+    "log_loss": 0.4757,
+    "ece": 0.0924,
     "by_confidence": [
+     {
+      "from": 0.3,
+      "to": 0.4,
+      "n": 2,
+      "accuracy": 50
+     },
      {
       "from": 0.4,
       "to": 0.5,
-      "n": 99,
-      "accuracy": 64.6
+      "n": 121,
+      "accuracy": 41.3
      },
      {
       "from": 0.5,
       "to": 0.6,
-      "n": 167,
-      "accuracy": 89.2
+      "n": 154,
+      "accuracy": 51.3
      },
      {
       "from": 0.6,
       "to": 0.7,
-      "n": 261,
-      "accuracy": 91.6
+      "n": 107,
+      "accuracy": 67.3
      },
      {
       "from": 0.7,
       "to": 0.8,
-      "n": 157,
-      "accuracy": 100
+      "n": 171,
+      "accuracy": 92.4
      },
      {
       "from": 0.8,
       "to": 0.9,
-      "n": 157,
-      "accuracy": 100
+      "n": 193,
+      "accuracy": 99.5
      },
      {
       "from": 0.9,
       "to": 1,
-      "n": 59,
+      "n": 152,
       "accuracy": 100
      }
     ]
    },
    "probabilities": "model",
    "errors": 0,
-   "latency_ms": null,
+   "latency_ms": {
+    "p50": 19.8,
+    "p95": 21.7,
+    "mean": 19.9,
+    "server_p50": 17.1
+   },
    "tokens": null
   },
   "rally": {
-   "rally_rate": 100,
-   "returns": 76,
-   "misses": 0,
+   "rally_rate": 66.3,
+   "returns": 67,
+   "misses": 34,
    "decisions": 1200,
-   "misses_per_100_returns": 0,
-   "rule_match": 93.9,
-   "longest_rally": 19,
+   "misses_per_100_returns": 50.7,
+   "rule_match": 72.9,
+   "longest_rally": 7,
    "per_seed": [
     {
      "seed": 101,
-     "returns": 19,
-     "misses": 0,
-     "rally_rate": 100
+     "returns": 17,
+     "misses": 8,
+     "rally_rate": 68
     },
     {
      "seed": 102,
-     "returns": 19,
-     "misses": 0,
-     "rally_rate": 100
+     "returns": 17,
+     "misses": 7,
+     "rally_rate": 70.8
     },
     {
      "seed": 103,
-     "returns": 19,
-     "misses": 0,
-     "rally_rate": 100
+     "returns": 16,
+     "misses": 11,
+     "rally_rate": 59.3
     },
     {
      "seed": 104,
-     "returns": 19,
-     "misses": 0,
-     "rally_rate": 100
+     "returns": 17,
+     "misses": 8,
+     "rally_rate": 68
     }
    ],
    "errors": 0,
-   "latency_ms": null,
+   "latency_ms": {
+    "p50": 19.3,
+    "p95": 21.2,
+    "mean": 19.1,
+    "server_p50": 16.8
+   },
    "tokens": null
   }
  },
@@ -229,14 +244,13 @@
    "decisions": 300
   }
  },
- "score": 95.8,
- "seconds": null,
+ "score": 72.3,
+ "seconds": 40.9,
  "calls": {
   "calls": 2100,
   "errors": 0,
   "inputTokens": 0,
   "outputTokens": 0,
   "lastError": ""
- },
- "timing": "not published"
+ }
 }
