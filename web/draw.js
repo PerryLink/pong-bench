@@ -129,7 +129,7 @@ export class Court {
       number(c, scene.score[0], X(COURT_W * 0.3), Y(6), dw, dh, "rgba(244,251,248,0.30)", "rgba(244,251,248,0.035)");
       number(c, scene.score[1], X(COURT_W * 0.7), Y(6), dw, dh, "rgba(244,251,248,0.30)", "rgba(244,251,248,0.035)");
     } else if (scene.score) {
-      c.fillStyle = "rgba(244,251,248,0.28)"; c.font = `600 ${Math.round(k * 12)}px Bahnschrift, "Segoe UI", sans-serif`;
+      c.fillStyle = "rgba(244,251,248,0.28)"; c.font = `600 ${Math.round(k * 12)}px Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Roboto, Arial, sans-serif`;
       c.textAlign = "center"; c.textBaseline = "top";
       c.fillText(String(scene.score[0]), X(COURT_W * 0.3), Y(5)); c.fillText(String(scene.score[1]), X(COURT_W * 0.7), Y(5));
     }

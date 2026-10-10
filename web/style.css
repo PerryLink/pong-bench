@@ -10,12 +10,14 @@
   --model: #34d3a6;
   --you: #f2b84b;
   --bad: #f2685b;
-  --font: "Bahnschrift", "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  /* Bahnschrift on Windows, DIN Alternate or SF on macOS, the system UI font (Cantarell, Ubuntu, Noto...) on Linux */
+  --font: "Bahnschrift", "DIN Alternate", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Roboto, "Noto Sans", Arial, sans-serif;
+  --mono: Consolas, "Cascadia Mono", "SF Mono", Menlo, Monaco, "DejaVu Sans Mono", "Liberation Mono", monospace;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); }
-body { display: flex; flex-direction: column; overflow: hidden; font-size: 14px; }
+body { display: flex; flex-direction: column; overflow: hidden; font-size: 14px; font-variant-numeric: tabular-nums; }
 [hidden] { display: none !important; }
 button { background: var(--model); color: #04110c; border: 0; border-radius: 8px; padding: 8px 16px; cursor: pointer;
   font: 600 13px var(--font); letter-spacing: .01em; }
@@ -125,7 +127,7 @@ kbd { font: 12px var(--font); padding: 1px 6px; border: 1px solid var(--line-2);
 .sys span { color: var(--mute); font-size: 10.5px; }
 .view summary { display: flex; justify-content: space-between; cursor: pointer; list-style: none; }
 .view summary::-webkit-details-marker { display: none; }
-pre { margin: 8px 0 0; padding: 10px; background: var(--panel-2); border-radius: 8px; font: 11.5px/1.45 Consolas, "Cascadia Mono", monospace;
+pre { margin: 8px 0 0; padding: 10px; background: var(--panel-2); border-radius: 8px; font: 11.5px/1.45 var(--mono);
   color: #b9c7d4; white-space: pre-wrap; word-break: break-word; max-height: 260px; overflow: auto; }
 
 /* settings drawer */
@@ -184,7 +186,7 @@ pre { margin: 8px 0 0; padding: 10px; background: var(--panel-2); border-radius:
 .bench-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .bench h2 { margin: 0 0 4px; font-size: 17px; font-weight: 600; }
 .bench .panel { display: flex; flex-direction: column; gap: 10px; }
-code { font: 12px Consolas, "Cascadia Mono", monospace; background: var(--panel-2); padding: 1px 5px; border-radius: 4px; color: #b9c7d4; }
+code { font: 12px var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 4px; color: #b9c7d4; }
 .kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: 12.5px; }
 .kv span { color: var(--mute); }
 .kv b { font-weight: 500; overflow-wrap: anywhere; }
