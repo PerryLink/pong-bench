@@ -119,7 +119,7 @@ Recipes (all in `configs/`):
 | llama.cpp server | `http://127.0.0.1:8080/v1` | `llama-server -m model.gguf`; logprobs work |
 | LM Studio | `http://127.0.0.1:1234/v1` | `"auth": "none"` |
 | Ollama (chat models) | `http://127.0.0.1:11434/v1` | `"auth": "none"` |
-| PongBench's transformers server | `http://127.0.0.1:8001/v1` | `python examples/python/hf_server.py --model <id>` |
+| PongBench's transformers server | `http://127.0.0.1:8001/v1` | `python3 examples/python/hf_server.py --model <id>` (`python` on Windows) |
 
 ## Claude (Anthropic)
 

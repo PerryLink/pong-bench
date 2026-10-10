@@ -60,7 +60,7 @@ it is never part of the headline score. Bots: Easy (220 ms late, aim off by up t
 PongBench score = (decisions macro accuracy + rally rate) / 2
 ```
 
-Both halves are percentages and speed-independent, so the score is comparable across a hosted API, a laptop GPU and a
+Both halves are percentages and speed-independent, so the score is comparable across a hosted API, a local GPU and a
 CPU. It is reported per **track**:
 
 | Track | What changes | Why |
@@ -80,12 +80,12 @@ Generated from `results/*/scorecard.json` by `node tools/results-table.mjs`. Bas
 | Jev (TypeSafe) | compact | **99.8** | 99.67% | 100% | 100% | 99% | 100% | 0 | yes | 330.1 ms |
 | Jev (TypeSafe) | minimal | **98.9** | 97.78% | 100% | 100% | 93.3% | 100% | 0 | yes | 330.2 ms |
 | Jev (TypeSafe) | standard | **98.6** | 97.22% | 99.3% | 92.7% | 99.7% | 100% | 0 | yes | 330 ms |
-| H2O-Lightning-4B (local GPU) | compact | **95.8** | 91.67% | 81.3% | 94.7% | 99% | 100% | 0 | yes | 106.7 ms |
+| H2O-Lightning-4B (local GPU) | compact | **95.8** | 91.67% | 81.3% | 94.7% | 99% | 100% | 0 | yes | – |
 | Jev (TypeSafe) | reasoning | **85.3** | 79% | 75% | 72.7% | 89.3% | 91.5% | 7 | yes | 329.7 ms |
-| H2O-Lightning-4B (local GPU) | standard | **84.7** | 80.44% | 76.3% | 76% | 89% | 89% | 9 | yes | 166.5 ms |
-| H2O-Lightning-4B (local GPU) | minimal | **72.3** | 78.22% | 47.3% | 100% | 87.3% | 66.3% | 34 | yes | 64 ms |
-| H2O-Lightning-4B (local GPU) | reasoning | **49.4** | 48.44% | 27% | 24.7% | 93.7% | 50.4% | 60 | yes | 163.4 ms |
-| Open-weight model (examples/python/hf_server.py) | standard (quick) | **30.4** | 38% | 31% | 0% | 83% | 22.7% | 34 | yes | 2443.1 ms |
+| H2O-Lightning-4B (local GPU) | standard | **84.7** | 80.44% | 76.3% | 76% | 89% | 89% | 9 | yes | – |
+| H2O-Lightning-4B (local GPU) | minimal | **72.3** | 78.22% | 47.3% | 100% | 87.3% | 66.3% | 34 | yes | – |
+| H2O-Lightning-4B (local GPU) | reasoning | **49.4** | 48.44% | 27% | 24.7% | 93.7% | 50.4% | 60 | yes | – |
+| Qwen3.5-4B (transformers server, CPU) | standard (quick) | **30.4** | 38% | 31% | 0% | 83% | 22.7% | 34 | yes | – |
 | *Rule oracle (baseline)* | standard | **100** | 100% | 100% | 100% | 100% | 100% | 0 | yes | – |
 | *Hesitant oracle (baseline)* | standard | **94** | 88% | 82.7% | 81.3% | 100% | 100% | 0 | yes | – |
 | *Noisy oracle 10% (baseline)* | standard | **91.9** | 91.22% | 91.7% | 90.7% | 91.3% | 92.6% | 6 | yes | – |
@@ -94,7 +94,7 @@ Generated from `results/*/scorecard.json` by `node tools/results-table.mjs`. Bas
 <!-- results:end -->
 
 The live table, with every run and its scorecard, is [`results/LEADERBOARD.md`](../results/LEADERBOARD.md).
-Latency was measured from India to TypeSafe's hosted API; local models were measured on a laptop in quiet mode.
+Jev's latency was measured from India to TypeSafe's hosted API; the local runs publish no timing.
 
 ## Rules for a result
 

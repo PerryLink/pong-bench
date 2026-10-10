@@ -4,7 +4,8 @@
 node bin/pongbench.js serve --config typesafe-jev        # then open http://127.0.0.1:8800
 ```
 
-(`npm start`, or `Start-PongBench.bat` on Windows.) The server holds the endpoint config and any key; the page never
+(`npm start` anywhere; or double-click `Start-PongBench.bat` on Windows or `Start-PongBench.command` on macOS, or run
+`./start-pongbench.sh` on macOS and Linux. `--open` opens the browser with `start`, `open` or `xdg-open`.) The server holds the endpoint config and any key; the page never
 sees a key. It binds to 127.0.0.1 unless you pass `--host`.
 
 Other websites open in the same browser cannot use it. The server answers only requests addressed to

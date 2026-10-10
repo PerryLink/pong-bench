@@ -5,6 +5,7 @@
 **A game benchmark for decision models.** Your model plays Pong one decision at a time: up, down or stay.
 
 ![node](https://img.shields.io/badge/node-%E2%89%A518.17-3c873a)
+![platforms](https://img.shields.io/badge/runs%20on-Windows%20%7C%20macOS%20%7C%20Linux-555)
 ![dependencies](https://img.shields.io/badge/dependencies-0-2ea44f)
 ![endpoints](https://img.shields.io/badge/endpoints-System%20One%20%7C%20OpenAI--compatible%20%7C%20Claude%20%7C%20local-1f6feb)
 ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
@@ -21,11 +22,11 @@ point at any model, hosted or local, and a game you can play against it.
 - **Plug in anything.** System One endpoints, any OpenAI-compatible chat API, Claude, open weights through a bundled
   transformers server, or a few lines of your own JavaScript. One JSON file per endpoint.
 - **A score that means the same everywhere.** 900 frozen decision states and 1,200 lockstep rally decisions. Speed is
-  not part of the score, so a hosted API, a laptop GPU and a CPU are compared on the same terms (latency is reported
+  not part of the score, so a hosted API, a local GPU and a CPU are compared on the same terms (latency is reported
   next to it).
 - **An app to see it.** Play against the model, watch it against bots, run the benchmark from the browser, tune
   prompts, replay every game.
-- **Zero dependencies.** Node 18.17 or newer. No `npm install`.
+- **Zero dependencies.** Node 18.17 or newer, on Windows, macOS or Linux. No `npm install`.
 - **Agent-ready.** Point Claude Code, Codex or Cursor at [`AGENTS.md`](AGENTS.md) and it sets your model up end to end.
 
 ## Results
@@ -38,12 +39,12 @@ Runs from 2026-10-10, full runs unless marked quick. Score = (decisions macro ac
 | Jev (TypeSafe) | compact | **99.8** | 99.67% | 100% | 100% | 99% | 100% | 0 | yes | 330.1 ms |
 | Jev (TypeSafe) | minimal | **98.9** | 97.78% | 100% | 100% | 93.3% | 100% | 0 | yes | 330.2 ms |
 | Jev (TypeSafe) | standard | **98.6** | 97.22% | 99.3% | 92.7% | 99.7% | 100% | 0 | yes | 330 ms |
-| H2O-Lightning-4B (local GPU) | compact | **95.8** | 91.67% | 81.3% | 94.7% | 99% | 100% | 0 | yes | 106.7 ms |
+| H2O-Lightning-4B (local GPU) | compact | **95.8** | 91.67% | 81.3% | 94.7% | 99% | 100% | 0 | yes | – |
 | Jev (TypeSafe) | reasoning | **85.3** | 79% | 75% | 72.7% | 89.3% | 91.5% | 7 | yes | 329.7 ms |
-| H2O-Lightning-4B (local GPU) | standard | **84.7** | 80.44% | 76.3% | 76% | 89% | 89% | 9 | yes | 166.5 ms |
-| H2O-Lightning-4B (local GPU) | minimal | **72.3** | 78.22% | 47.3% | 100% | 87.3% | 66.3% | 34 | yes | 64 ms |
-| H2O-Lightning-4B (local GPU) | reasoning | **49.4** | 48.44% | 27% | 24.7% | 93.7% | 50.4% | 60 | yes | 163.4 ms |
-| Open-weight model (examples/python/hf_server.py) | standard (quick) | **30.4** | 38% | 31% | 0% | 83% | 22.7% | 34 | yes | 2443.1 ms |
+| H2O-Lightning-4B (local GPU) | standard | **84.7** | 80.44% | 76.3% | 76% | 89% | 89% | 9 | yes | – |
+| H2O-Lightning-4B (local GPU) | minimal | **72.3** | 78.22% | 47.3% | 100% | 87.3% | 66.3% | 34 | yes | – |
+| H2O-Lightning-4B (local GPU) | reasoning | **49.4** | 48.44% | 27% | 24.7% | 93.7% | 50.4% | 60 | yes | – |
+| Qwen3.5-4B (transformers server, CPU) | standard (quick) | **30.4** | 38% | 31% | 0% | 83% | 22.7% | 34 | yes | – |
 | *Rule oracle (baseline)* | standard | **100** | 100% | 100% | 100% | 100% | 100% | 0 | yes | – |
 | *Hesitant oracle (baseline)* | standard | **94** | 88% | 82.7% | 81.3% | 100% | 100% | 0 | yes | – |
 | *Noisy oracle 10% (baseline)* | standard | **91.9** | 91.22% | 91.7% | 90.7% | 91.3% | 92.6% | 6 | yes | – |
@@ -56,21 +57,22 @@ What stands out:
 - **Jev** (TypeSafe, hosted) is close to perfect on the official track: 98.6, with every rally ball returned. Its one
   soft spot: 22 of its 25 mistakes are `stay` where the answer was `down`, mostly when the ball lands just outside the
   5-unit window (75.8% right in the 5 to 8 unit band, 100% beyond 12).
-- **H2O-Lightning-4B** is a 4B model on a laptop GPU. It scores 84.7 with the official prompt and **95.8** with the
+- **H2O-Lightning-4B** is a 4B model on a local GPU. It scores 84.7 with the official prompt and **95.8** with the
   compact one (72.3 with the one-line minimal prompt): small models care a lot about how the question is put.
 - **The reasoning track separates models.** Without `interceptY` the model has to work out the bounce from the ball's
   position and velocity. Jev drops to 85.3; H2O-Lightning to 49.4, because it falls back to `stay` most of the time.
 - **Qwen3.5-4B** is a general chat model with no decision training, run through the bundled transformers server
-  (bf16 on the laptop CPU, thinking off, one-token answers). It lands at 30.4 on a quick run, about where random play
+  (bf16 on a CPU, thinking off, one-token answers). It lands at 30.4 on a quick run, about where random play
   does. It never once answered `down`: when `down` was right it said `up` 65 times out of 100, as if y grew upward,
   although the prompt says the opposite. A full run on a CPU takes about 90 minutes, so this one is a quick run.
 - *Italic* rows are scripted baselines that mark the range: a perfect player, a "hesitant" one that makes the typical
   decision-model mistake, 10% noise, random, and a paddle that never moves.
 
 Every run has a scorecard in [`results/`](results/) (per move, per distance band, the court edges, a confusion matrix,
-calibration, latency, tokens) and the leaderboard is [`results/LEADERBOARD.md`](results/LEADERBOARD.md). Latency was
-measured from India to TypeSafe's API and on a laptop in its quiet power mode, so treat those
-milliseconds as a floor for your own setup, not a property of the model.
+calibration, latency, tokens) and the leaderboard is [`results/LEADERBOARD.md`](results/LEADERBOARD.md). Jev's latency
+was measured from India to TypeSafe's API, so it is mostly network. The local runs publish no timing (their scorecards
+say so, and `tools/strip-timing.mjs` does the same for yours): scores never depend on speed, and a latency only means
+something next to the exact machine it came from.
 
 ## Quick start
 
@@ -79,10 +81,20 @@ git clone https://github.com/Rkcr7/pong-bench.git
 cd pong-bench
 npm test                                                  # about 10 seconds, nothing to install
 node bin/pongbench.js run --config mock-hesitant --quick  # a scripted player, to see a scorecard
-node bin/pongbench.js serve --config mock-hesitant        # the app, at http://127.0.0.1:8800
+node bin/pongbench.js serve --config mock-hesitant --open # the app, at http://127.0.0.1:8800
 ```
 
-On Windows, double-click `Start-PongBench.bat` (or run `Start-PongBench.bat typesafe-jev`): it starts the app and opens the browser.
+The same commands work on Windows, macOS and Linux. To start the app with a double-click:
+
+| | Launcher | With a config |
+|---|---|---|
+| Windows | `Start-PongBench.bat` | `Start-PongBench.bat typesafe-jev` |
+| macOS | `Start-PongBench.command` (in Finder) | `./start-pongbench.sh typesafe-jev` |
+| Linux | `./start-pongbench.sh` | `./start-pongbench.sh typesafe-jev` |
+
+No Node yet? macOS: `brew install node`. Linux: [nvm](https://github.com/nvm-sh/nvm) (`nvm install 22`) or your
+distribution's `nodejs` package, if it is 18.17 or newer. Windows: the installer from [nodejs.org](https://nodejs.org).
+If macOS refuses to open the `.command` file from a downloaded zip, right-click it and choose Open once.
 
 ## Let your coding agent set it up
 
@@ -104,7 +116,7 @@ instead.
 | `POST /v1/systemone`: TypeSafe Jev, Databricks AI Gateway, Cloudflare Workers AI (Clef), Ollama 0.35+, OpenJev and other System One servers | `systemone` | [`typesafe-jev`](configs/typesafe-jev.json), [`systemone-local`](configs/systemone-local.json), [`databricks-systemone`](configs/databricks-systemone.json), [`cloudflare-clef`](configs/cloudflare-clef.json), [`ollama-systemone`](configs/ollama-systemone.json) |
 | an OpenAI-compatible chat API: OpenAI, Azure OpenAI, OpenRouter, Gemini, vLLM, SGLang, llama.cpp, LM Studio, Ollama | `openai` | [`openai`](configs/openai.json), [`azure-openai`](configs/azure-openai.json), [`openrouter`](configs/openrouter.json), [`gemini`](configs/gemini.json), [`vllm`](configs/vllm.json), [`llamacpp`](configs/llamacpp.json), [`lmstudio`](configs/lmstudio.json), [`ollama-chat`](configs/ollama-chat.json) |
 | a Claude model | `anthropic` | [`anthropic`](configs/anthropic.json) (`npm install @anthropic-ai/sdk` first) |
-| open weights with no server yet (any Hugging Face causal LM) | start [`hf_server.py`](examples/python/hf_server.py), then `openai` or `systemone` | [`hf-local`](configs/hf-local.json), [`hf-local-systemone`](configs/hf-local-systemone.json) |
+| open weights with no server yet (any Hugging Face causal LM; NVIDIA, Apple-silicon or CPU) | start [`hf_server.py`](examples/python/hf_server.py), then `openai` or `systemone` | [`hf-local`](configs/hf-local.json), [`hf-local-systemone`](configs/hf-local-systemone.json) |
 | anything else (an SDK, a local process, a rule) | `module` | [`custom-module`](configs/custom-module.json) and [`custom-connector.mjs`](examples/custom-connector.mjs) |
 
 A config names the environment variable that holds the key; it never holds the key itself:
@@ -120,7 +132,9 @@ A config names the environment variable that holds the key; it never holds the k
 }
 ```
 
-**2. Give it the key**, in your shell or in `.env` (git-ignored): `TYPESAFE_API_KEY=...`
+**2. Give it the key**, in `.env` (git-ignored, one `NAME=value` per line, the same on every OS) or in your shell:
+`export TYPESAFE_API_KEY=...` (macOS, Linux), `$env:TYPESAFE_API_KEY="..."` (PowerShell), `set TYPESAFE_API_KEY=...`
+(cmd).
 
 **3. Check, then run:**
 

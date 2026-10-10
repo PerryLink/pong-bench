@@ -31,14 +31,15 @@ Ask the user if it is not clear from context. Pick the first row that fits:
 | served over `POST /v1/systemone` (TypeSafe Jev, Databricks, Cloudflare Clef, Ollama 0.35+ decision models, Ollajev, a decision model's own server) | `systemone` | `configs/typesafe-jev.json`, `configs/systemone-local.json`, `configs/databricks-systemone.json`, `configs/cloudflare-clef.json`, `configs/ollama-systemone.json` |
 | an OpenAI-compatible chat API (OpenAI, Azure OpenAI, OpenRouter, Gemini, Groq, Together, vLLM, SGLang, llama.cpp, LM Studio, Ollama chat) | `openai` | `configs/openai.json`, `configs/azure-openai.json`, `configs/openrouter.json`, `configs/vllm.json`, ... |
 | a Claude model | `anthropic` | `configs/anthropic.json` |
-| open weights on disk or on Hugging Face, with no server yet | start a server: `python examples/python/hf_server.py --model <id or folder>` (needs `pip install torch transformers`), then `openai` | `configs/hf-local.json` (or `configs/hf-local-systemone.json`) |
+| open weights on disk or on Hugging Face, with no server yet | start a server: `python examples/python/hf_server.py --model <id or folder>` (`python3` on macOS and Linux; needs `pip install torch transformers`; it picks CUDA, Apple's MPS or the CPU by itself), then `openai` | `configs/hf-local.json` (or `configs/hf-local-systemone.json`) |
 | code the user writes (an SDK, a local process, anything) | `module` | `configs/custom-module.json` and `examples/custom-connector.mjs` |
 
 ## 3. Write the config
 
 Copy the closest example to `configs/<short-name>.json` and fill in the URL, the model id and `apiKeyEnv`. Set `name`
 to how the model should appear in results (for example `"Qwen3-8B (vLLM, RTX 4090)"`). If the user has the key, put it
-in `.env` as `NAME=value` (one line), or ask them to export it in their shell.
+in `.env` as `NAME=value` (one line; this works the same on Windows, macOS and Linux), or ask them to set it in their
+shell (`export NAME=...` in bash or zsh, `$env:NAME="..."` in PowerShell).
 
 Verify: `node bin/pongbench.js configs` lists it, with `key found` (or `not needed`).
 
