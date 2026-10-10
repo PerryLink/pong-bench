@@ -4,6 +4,7 @@
 
 **A game benchmark for decision models.** Your model plays Pong one decision at a time: up, down or stay.
 
+[![check](https://github.com/Rkcr7/pong-bench/actions/workflows/check.yml/badge.svg)](https://github.com/Rkcr7/pong-bench/actions/workflows/check.yml)
 ![node](https://img.shields.io/badge/node-%E2%89%A518.17-3c873a)
 ![platforms](https://img.shields.io/badge/runs%20on-Windows%20%7C%20macOS%20%7C%20Linux-555)
 ![dependencies](https://img.shields.io/badge/dependencies-0-2ea44f)
@@ -263,8 +264,8 @@ Start-PongBench.bat, Start-PongBench.command, start-pongbench.sh    launchers fo
   services here. If one needs a fix, a pull request with the `check` output is very welcome.
 - **Platforms.** Checked by hand on Windows 11 and on Linux (Debian 12, Node 18 and 22): the tests, the frozen suites, a
   run, the launcher, the app's pages on a case-sensitive file system, HTTP and WebSocket decisions. macOS runs the same
-  code, and the CI workflow runs the checks on Linux, macOS and Windows with Node 18, 20 and 22 on every push, but no
-  Mac was at hand for a check by hand.
+  code and passes the same checks in CI: every push runs them on Linux, macOS and Windows with Node 18, 20 and 22. The
+  app itself was not clicked through on a Mac.
 - **The app is for your own machine.** It holds your keys and spends your credits, so it refuses requests from other
   websites and DNS-rebinding tricks, and switches endpoints only by config name. Details in [`docs/APP.md`](docs/APP.md).
 - **One game, one skill.** PongBench measures reading a small numeric state and picking an action under a stated rule,
