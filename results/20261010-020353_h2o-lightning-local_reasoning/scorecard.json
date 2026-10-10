@@ -1,0 +1,254 @@
+{
+ "id": "20261010-020353_h2o-lightning-local_reasoning",
+ "pongbench": "1.0.0",
+ "created": "2026-10-10T02:03:53.077Z",
+ "label": "laptop in quiet mode; latency not representative",
+ "model": {
+  "name": "H2O-Lightning-4B (local GPU)",
+  "connector": "systemone",
+  "model": "h2o-lightning-4b",
+  "endpoint": "http://127.0.0.1:8798/v1/systemone"
+ },
+ "config": {
+  "name": "H2O-Lightning-4B (local GPU)",
+  "connector": "systemone",
+  "url": "http://127.0.0.1:8798/v1/systemone",
+  "model": "h2o-lightning-4b",
+  "auth": "none",
+  "concurrency": 1,
+  "note": "H2O-Lightning-4B served over System One on a laptop GPU (MXFP8 weights; 97% the same moves as the lossless build)",
+  "id": "h2o-lightning-local",
+  "file": "h2o-lightning-local.json",
+  "key": "not needed"
+ },
+ "track": "reasoning",
+ "prompt": {
+  "name": "Reasoning",
+  "builtin": true,
+  "note": "no interceptY: the model gets the ball's position and velocity and must work out the bounce itself",
+  "instructions": "You control the right paddle in a game of Pong. The court is court.w wide and court.h tall; y = 0 is the top edge and y grows downward, so \"up\" DECREASES y and \"down\" INCREASES y. The ball moves by (ball.vx, ball.vy) each step and bounces off the top and bottom edges. Your paddle (paddle.y is its centre) sits at x = paddle.x. When ball.vx > 0 the ball is coming to you: work out the y where it will reach x = paddle.x and move so that paddle.y is within {tol} units of it. When ball.vx < 0 the ball is moving away. Answer with one move only.",
+  "criteria": {
+   "up": "The ball is coming and will reach your paddle more than {tol} units above paddle.y.",
+   "down": "The ball is coming and will reach your paddle more than {tol} units below paddle.y.",
+   "stay": "The ball is moving away, or it will reach your paddle within {tol} units of paddle.y."
+  },
+  "context": "",
+  "fields": [
+   "court",
+   "ballPos",
+   "ballVel",
+   "paddleX",
+   "paddleH"
+  ],
+  "decimals": 1
+ },
+ "tolerance": 5,
+ "stay_bias": 0,
+ "quick": false,
+ "concurrency": 1,
+ "suites": {
+  "decisions": {
+   "macro_accuracy": 48.44,
+   "accuracy": 48.4,
+   "per_move": {
+    "up": {
+     "right": 81,
+     "of": 300,
+     "accuracy": 27
+    },
+    "down": {
+     "right": 74,
+     "of": 300,
+     "accuracy": 24.7
+    },
+    "stay": {
+     "right": 281,
+     "of": 300,
+     "accuracy": 93.7
+    }
+   },
+   "per_kind": {
+    "away": {
+     "right": 150,
+     "of": 150,
+     "accuracy": 100
+    },
+    "covered": {
+     "right": 131,
+     "of": 150,
+     "accuracy": 87.3
+    }
+   },
+   "bands": {
+    "5-8": {
+     "right": 6,
+     "of": 91,
+     "accuracy": 6.6
+    },
+    "8-12": {
+     "right": 4,
+     "of": 96,
+     "accuracy": 4.2
+    },
+    "12+": {
+     "right": 145,
+     "of": 413,
+     "accuracy": 35.1
+    }
+   },
+   "edges": {
+    "top": {
+     "right": 29,
+     "of": 37,
+     "accuracy": 78.4
+    },
+    "bottom": {
+     "right": 7,
+     "of": 16,
+     "accuracy": 43.8
+    }
+   },
+   "confusion": {
+    "up": {
+     "up": 81,
+     "down": 2,
+     "stay": 217,
+     "error": 0
+    },
+    "down": {
+     "up": 43,
+     "down": 74,
+     "stay": 183,
+     "error": 0
+    },
+    "stay": {
+     "up": 15,
+     "down": 4,
+     "stay": 281,
+     "error": 0
+    }
+   },
+   "calibration": {
+    "n": 900,
+    "brier": 0.5627,
+    "log_loss": 0.9462,
+    "ece": 0.1103,
+    "by_confidence": [
+     {
+      "from": 0.3,
+      "to": 0.4,
+      "n": 177,
+      "accuracy": 35
+     },
+     {
+      "from": 0.4,
+      "to": 0.5,
+      "n": 349,
+      "accuracy": 35.5
+     },
+     {
+      "from": 0.5,
+      "to": 0.6,
+      "n": 168,
+      "accuracy": 38.7
+     },
+     {
+      "from": 0.6,
+      "to": 0.7,
+      "n": 80,
+      "accuracy": 75
+     },
+     {
+      "from": 0.7,
+      "to": 0.8,
+      "n": 115,
+      "accuracy": 99.1
+     },
+     {
+      "from": 0.8,
+      "to": 0.9,
+      "n": 11,
+      "accuracy": 100
+     }
+    ]
+   },
+   "probabilities": "model",
+   "errors": 0,
+   "latency_ms": {
+    "p50": 163.4,
+    "p95": 170.9,
+    "mean": 162.8,
+    "server_p50": 160.7
+   },
+   "tokens": null
+  },
+  "rally": {
+   "rally_rate": 50.4,
+   "returns": 61,
+   "misses": 60,
+   "decisions": 1200,
+   "misses_per_100_returns": 98.4,
+   "rule_match": 60,
+   "longest_rally": 3,
+   "per_seed": [
+    {
+     "seed": 101,
+     "returns": 15,
+     "misses": 16,
+     "rally_rate": 48.4
+    },
+    {
+     "seed": 102,
+     "returns": 15,
+     "misses": 16,
+     "rally_rate": 48.4
+    },
+    {
+     "seed": 103,
+     "returns": 15,
+     "misses": 15,
+     "rally_rate": 50
+    },
+    {
+     "seed": 104,
+     "returns": 16,
+     "misses": 13,
+     "rally_rate": 55.2
+    }
+   ],
+   "errors": 0,
+   "latency_ms": {
+    "p50": 164.2,
+    "p95": 181.8,
+    "mean": 163.6,
+    "server_p50": 161.4
+   },
+   "tokens": null
+  }
+ },
+ "versions": {
+  "decisions": {
+   "version": "decisions-v1",
+   "sha256": "bb08d111d3ae34fabb0606539f994c435573e7ec77d8e4d6ff8a32d4dc59519e"
+  },
+  "rally": {
+   "version": "rally-v1",
+   "seeds": [
+    101,
+    102,
+    103,
+    104
+   ],
+   "decisions": 300
+  }
+ },
+ "score": 49.4,
+ "seconds": 343,
+ "calls": {
+  "calls": 2100,
+  "errors": 0,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "lastError": ""
+ }
+}

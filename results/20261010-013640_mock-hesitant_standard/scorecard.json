@@ -1,0 +1,232 @@
+{
+ "id": "20261010-013640_mock-hesitant_standard",
+ "pongbench": "1.0.0",
+ "created": "2026-10-10T01:36:40.644Z",
+ "label": "",
+ "model": {
+  "name": "Hesitant oracle (baseline)",
+  "connector": "mock",
+  "model": "",
+  "endpoint": "mock:hesitant"
+ },
+ "config": {
+  "name": "Hesitant oracle (baseline)",
+  "connector": "mock",
+  "policy": "hesitant",
+  "nearStay": 0.6,
+  "seed": 7,
+  "note": "the typical decision-model mistake: stays when the ball arrives just outside the tolerance",
+  "id": "mock-hesitant",
+  "file": "mock-hesitant.json",
+  "key": "not needed"
+ },
+ "track": "standard",
+ "prompt": {
+  "name": "Standard",
+  "builtin": true,
+  "note": "decisio's own Pong prompt and state, word for word: the official track (comparable with the original demo)",
+  "instructions": "You control the right paddle in a game of Pong. The state is a JSON object of numbers: the court size, the ball position and velocity, your paddle (paddle.y is its CENTRE, paddle.h its height), interceptY, and dir. y = 0 is the top edge and y grows downward, so \"up\" DECREASES y and \"down\" INCREASES y. interceptY is the y value where the ball will cross your paddle plane after any wall bounces; it is null when the ball is moving away from you. Move so that paddle.y covers interceptY. Treat the paddle as already covering it when paddle.y is within {tol} units of interceptY. Answer with one move only.",
+  "criteria": {
+   "up": "interceptY is more than {tol} units above paddle.y (interceptY < paddle.y - {tol}). Moving up decreases paddle.y.",
+   "down": "interceptY is more than {tol} units below paddle.y (interceptY > paddle.y + {tol}). Moving down increases paddle.y.",
+   "stay": "interceptY is null, or paddle.y is already within {tol} units of interceptY."
+  },
+  "context": "",
+  "fields": [
+   "court",
+   "ballPos",
+   "ballVel",
+   "paddleH",
+   "intercept",
+   "dir"
+  ],
+  "decimals": 1
+ },
+ "tolerance": 5,
+ "stay_bias": 0,
+ "quick": false,
+ "concurrency": 8,
+ "suites": {
+  "decisions": {
+   "macro_accuracy": 88,
+   "accuracy": 88,
+   "per_move": {
+    "up": {
+     "right": 248,
+     "of": 300,
+     "accuracy": 82.7
+    },
+    "down": {
+     "right": 244,
+     "of": 300,
+     "accuracy": 81.3
+    },
+    "stay": {
+     "right": 300,
+     "of": 300,
+     "accuracy": 100
+    }
+   },
+   "per_kind": {
+    "away": {
+     "right": 150,
+     "of": 150,
+     "accuracy": 100
+    },
+    "covered": {
+     "right": 150,
+     "of": 150,
+     "accuracy": 100
+    }
+   },
+   "bands": {
+    "5-8": {
+     "right": 35,
+     "of": 91,
+     "accuracy": 38.5
+    },
+    "8-12": {
+     "right": 44,
+     "of": 96,
+     "accuracy": 45.8
+    },
+    "12+": {
+     "right": 413,
+     "of": 413,
+     "accuracy": 100
+    }
+   },
+   "edges": {
+    "top": {
+     "right": 37,
+     "of": 37,
+     "accuracy": 100
+    },
+    "bottom": {
+     "right": 16,
+     "of": 16,
+     "accuracy": 100
+    }
+   },
+   "confusion": {
+    "up": {
+     "up": 248,
+     "down": 0,
+     "stay": 52,
+     "error": 0
+    },
+    "down": {
+     "up": 0,
+     "down": 244,
+     "stay": 56,
+     "error": 0
+    },
+    "stay": {
+     "up": 0,
+     "down": 0,
+     "stay": 300,
+     "error": 0
+    }
+   },
+   "calibration": {
+    "n": 900,
+    "brier": 0.219,
+    "log_loss": 0.4522,
+    "ece": 0.02,
+    "by_confidence": [
+     {
+      "from": 0.9,
+      "to": 1,
+      "n": 900,
+      "accuracy": 88
+     }
+    ]
+   },
+   "probabilities": "model",
+   "errors": 0,
+   "latency_ms": {
+    "p50": 0,
+    "p95": 0,
+    "mean": 0,
+    "server_p50": null
+   },
+   "tokens": {
+    "input": 0,
+    "output": 0,
+    "per_decision_input": 0
+   }
+  },
+  "rally": {
+   "rally_rate": 100,
+   "returns": 76,
+   "misses": 0,
+   "decisions": 1200,
+   "misses_per_100_returns": 0,
+   "rule_match": 93.6,
+   "longest_rally": 19,
+   "per_seed": [
+    {
+     "seed": 101,
+     "returns": 19,
+     "misses": 0,
+     "rally_rate": 100
+    },
+    {
+     "seed": 102,
+     "returns": 19,
+     "misses": 0,
+     "rally_rate": 100
+    },
+    {
+     "seed": 103,
+     "returns": 19,
+     "misses": 0,
+     "rally_rate": 100
+    },
+    {
+     "seed": 104,
+     "returns": 19,
+     "misses": 0,
+     "rally_rate": 100
+    }
+   ],
+   "errors": 0,
+   "latency_ms": {
+    "p50": 0,
+    "p95": 0,
+    "mean": 0,
+    "server_p50": null
+   },
+   "tokens": {
+    "input": 0,
+    "output": 0,
+    "per_decision_input": 0
+   }
+  }
+ },
+ "versions": {
+  "decisions": {
+   "version": "decisions-v1",
+   "sha256": "bb08d111d3ae34fabb0606539f994c435573e7ec77d8e4d6ff8a32d4dc59519e"
+  },
+  "rally": {
+   "version": "rally-v1",
+   "seeds": [
+    101,
+    102,
+    103,
+    104
+   ],
+   "decisions": 300
+  }
+ },
+ "score": 94,
+ "seconds": 0,
+ "calls": {
+  "calls": 2100,
+  "errors": 0,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "lastError": ""
+ }
+}

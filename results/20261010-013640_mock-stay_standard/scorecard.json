@@ -1,0 +1,230 @@
+{
+ "id": "20261010-013640_mock-stay_standard",
+ "pongbench": "1.0.0",
+ "created": "2026-10-10T01:36:40.397Z",
+ "label": "",
+ "model": {
+  "name": "Always stay (baseline)",
+  "connector": "mock",
+  "model": "",
+  "endpoint": "mock:stay"
+ },
+ "config": {
+  "name": "Always stay (baseline)",
+  "connector": "mock",
+  "policy": "stay",
+  "note": "never moves",
+  "id": "mock-stay",
+  "file": "mock-stay.json",
+  "key": "not needed"
+ },
+ "track": "standard",
+ "prompt": {
+  "name": "Standard",
+  "builtin": true,
+  "note": "decisio's own Pong prompt and state, word for word: the official track (comparable with the original demo)",
+  "instructions": "You control the right paddle in a game of Pong. The state is a JSON object of numbers: the court size, the ball position and velocity, your paddle (paddle.y is its CENTRE, paddle.h its height), interceptY, and dir. y = 0 is the top edge and y grows downward, so \"up\" DECREASES y and \"down\" INCREASES y. interceptY is the y value where the ball will cross your paddle plane after any wall bounces; it is null when the ball is moving away from you. Move so that paddle.y covers interceptY. Treat the paddle as already covering it when paddle.y is within {tol} units of interceptY. Answer with one move only.",
+  "criteria": {
+   "up": "interceptY is more than {tol} units above paddle.y (interceptY < paddle.y - {tol}). Moving up decreases paddle.y.",
+   "down": "interceptY is more than {tol} units below paddle.y (interceptY > paddle.y + {tol}). Moving down increases paddle.y.",
+   "stay": "interceptY is null, or paddle.y is already within {tol} units of interceptY."
+  },
+  "context": "",
+  "fields": [
+   "court",
+   "ballPos",
+   "ballVel",
+   "paddleH",
+   "intercept",
+   "dir"
+  ],
+  "decimals": 1
+ },
+ "tolerance": 5,
+ "stay_bias": 0,
+ "quick": false,
+ "concurrency": 8,
+ "suites": {
+  "decisions": {
+   "macro_accuracy": 33.33,
+   "accuracy": 33.3,
+   "per_move": {
+    "up": {
+     "right": 0,
+     "of": 300,
+     "accuracy": 0
+    },
+    "down": {
+     "right": 0,
+     "of": 300,
+     "accuracy": 0
+    },
+    "stay": {
+     "right": 300,
+     "of": 300,
+     "accuracy": 100
+    }
+   },
+   "per_kind": {
+    "away": {
+     "right": 150,
+     "of": 150,
+     "accuracy": 100
+    },
+    "covered": {
+     "right": 150,
+     "of": 150,
+     "accuracy": 100
+    }
+   },
+   "bands": {
+    "5-8": {
+     "right": 0,
+     "of": 91,
+     "accuracy": 0
+    },
+    "8-12": {
+     "right": 0,
+     "of": 96,
+     "accuracy": 0
+    },
+    "12+": {
+     "right": 0,
+     "of": 413,
+     "accuracy": 0
+    }
+   },
+   "edges": {
+    "top": {
+     "right": 0,
+     "of": 37,
+     "accuracy": 0
+    },
+    "bottom": {
+     "right": 0,
+     "of": 16,
+     "accuracy": 0
+    }
+   },
+   "confusion": {
+    "up": {
+     "up": 0,
+     "down": 0,
+     "stay": 300,
+     "error": 0
+    },
+    "down": {
+     "up": 0,
+     "down": 0,
+     "stay": 300,
+     "error": 0
+    },
+    "stay": {
+     "up": 0,
+     "down": 0,
+     "stay": 300,
+     "error": 0
+    }
+   },
+   "calibration": {
+    "n": 900,
+    "brier": 1.1483,
+    "log_loss": 2.0323,
+    "ece": 0.5667,
+    "by_confidence": [
+     {
+      "from": 0.9,
+      "to": 1,
+      "n": 900,
+      "accuracy": 33.3
+     }
+    ]
+   },
+   "probabilities": "model",
+   "errors": 0,
+   "latency_ms": {
+    "p50": 0,
+    "p95": 0,
+    "mean": 0,
+    "server_p50": null
+   },
+   "tokens": {
+    "input": 0,
+    "output": 0,
+    "per_decision_input": 0
+   }
+  },
+  "rally": {
+   "rally_rate": 22.8,
+   "returns": 41,
+   "misses": 139,
+   "decisions": 1200,
+   "misses_per_100_returns": 339,
+   "rule_match": 33,
+   "longest_rally": 3,
+   "per_seed": [
+    {
+     "seed": 101,
+     "returns": 12,
+     "misses": 27,
+     "rally_rate": 30.8
+    },
+    {
+     "seed": 102,
+     "returns": 10,
+     "misses": 35,
+     "rally_rate": 22.2
+    },
+    {
+     "seed": 103,
+     "returns": 7,
+     "misses": 47,
+     "rally_rate": 13
+    },
+    {
+     "seed": 104,
+     "returns": 12,
+     "misses": 30,
+     "rally_rate": 28.6
+    }
+   ],
+   "errors": 0,
+   "latency_ms": {
+    "p50": 0,
+    "p95": 0,
+    "mean": 0,
+    "server_p50": null
+   },
+   "tokens": {
+    "input": 0,
+    "output": 0,
+    "per_decision_input": 0
+   }
+  }
+ },
+ "versions": {
+  "decisions": {
+   "version": "decisions-v1",
+   "sha256": "bb08d111d3ae34fabb0606539f994c435573e7ec77d8e4d6ff8a32d4dc59519e"
+  },
+  "rally": {
+   "version": "rally-v1",
+   "seeds": [
+    101,
+    102,
+    103,
+    104
+   ],
+   "decisions": 300
+  }
+ },
+ "score": 28.1,
+ "seconds": 0,
+ "calls": {
+  "calls": 2100,
+  "errors": 0,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "lastError": ""
+ }
+}

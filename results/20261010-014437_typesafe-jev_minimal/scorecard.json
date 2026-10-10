@@ -1,0 +1,252 @@
+{
+ "id": "20261010-014437_typesafe-jev_minimal",
+ "pongbench": "1.0.0",
+ "created": "2026-10-10T01:44:37.704Z",
+ "label": "",
+ "model": {
+  "name": "Jev (TypeSafe)",
+  "connector": "systemone",
+  "model": "jev-latest",
+  "endpoint": "https://api.typesafe.ai/v1/systemone"
+ },
+ "config": {
+  "name": "Jev (TypeSafe)",
+  "connector": "systemone",
+  "url": "https://api.typesafe.ai/v1/systemone",
+  "model": "jev-latest",
+  "apiKeyEnv": "TYPESAFE_API_KEY",
+  "concurrency": 8,
+  "note": "TypeSafe's hosted System One model; $0.042 per million input tokens (models page, 2026-10)",
+  "id": "typesafe-jev",
+  "file": "typesafe-jev.json",
+  "key": "found"
+ },
+ "track": "minimal",
+ "prompt": {
+  "name": "Minimal",
+  "builtin": true,
+  "note": "one line of instructions and bare comparisons: how much does the model need to be told?",
+  "instructions": "Right Pong paddle. y grows downward.",
+  "criteria": {
+   "up": "interceptY < paddle.y - {tol}",
+   "down": "interceptY > paddle.y + {tol}",
+   "stay": "otherwise, or interceptY is null"
+  },
+  "context": "",
+  "fields": [
+   "intercept"
+  ],
+  "decimals": 1
+ },
+ "tolerance": 5,
+ "stay_bias": 0,
+ "quick": false,
+ "concurrency": 8,
+ "suites": {
+  "decisions": {
+   "macro_accuracy": 97.78,
+   "accuracy": 97.8,
+   "per_move": {
+    "up": {
+     "right": 300,
+     "of": 300,
+     "accuracy": 100
+    },
+    "down": {
+     "right": 300,
+     "of": 300,
+     "accuracy": 100
+    },
+    "stay": {
+     "right": 280,
+     "of": 300,
+     "accuracy": 93.3
+    }
+   },
+   "per_kind": {
+    "away": {
+     "right": 150,
+     "of": 150,
+     "accuracy": 100
+    },
+    "covered": {
+     "right": 130,
+     "of": 150,
+     "accuracy": 86.7
+    }
+   },
+   "bands": {
+    "5-8": {
+     "right": 91,
+     "of": 91,
+     "accuracy": 100
+    },
+    "8-12": {
+     "right": 96,
+     "of": 96,
+     "accuracy": 100
+    },
+    "12+": {
+     "right": 413,
+     "of": 413,
+     "accuracy": 100
+    }
+   },
+   "edges": {
+    "top": {
+     "right": 37,
+     "of": 37,
+     "accuracy": 100
+    },
+    "bottom": {
+     "right": 16,
+     "of": 16,
+     "accuracy": 100
+    }
+   },
+   "confusion": {
+    "up": {
+     "up": 300,
+     "down": 0,
+     "stay": 0,
+     "error": 0
+    },
+    "down": {
+     "up": 0,
+     "down": 300,
+     "stay": 0,
+     "error": 0
+    },
+    "stay": {
+     "up": 20,
+     "down": 0,
+     "stay": 280,
+     "error": 0
+    }
+   },
+   "calibration": {
+    "n": 900,
+    "brier": 0.0381,
+    "log_loss": 0.0759,
+    "ece": 0.0201,
+    "by_confidence": [
+     {
+      "from": 0.5,
+      "to": 0.6,
+      "n": 10,
+      "accuracy": 60
+     },
+     {
+      "from": 0.6,
+      "to": 0.7,
+      "n": 16,
+      "accuracy": 75
+     },
+     {
+      "from": 0.7,
+      "to": 0.8,
+      "n": 31,
+      "accuracy": 87.1
+     },
+     {
+      "from": 0.8,
+      "to": 0.9,
+      "n": 37,
+      "accuracy": 91.9
+     },
+     {
+      "from": 0.9,
+      "to": 1,
+      "n": 806,
+      "accuracy": 99.4
+     }
+    ]
+   },
+   "probabilities": "model",
+   "errors": 0,
+   "latency_ms": {
+    "p50": 330.2,
+    "p95": 379.5,
+    "mean": 336.6,
+    "server_p50": null
+   },
+   "tokens": {
+    "input": 331509,
+    "output": 34200,
+    "per_decision_input": 368
+   }
+  },
+  "rally": {
+   "rally_rate": 100,
+   "returns": 76,
+   "misses": 0,
+   "decisions": 1200,
+   "misses_per_100_returns": 0,
+   "rule_match": 97.8,
+   "longest_rally": 19,
+   "per_seed": [
+    {
+     "seed": 101,
+     "returns": 19,
+     "misses": 0,
+     "rally_rate": 100
+    },
+    {
+     "seed": 102,
+     "returns": 19,
+     "misses": 0,
+     "rally_rate": 100
+    },
+    {
+     "seed": 103,
+     "returns": 19,
+     "misses": 0,
+     "rally_rate": 100
+    },
+    {
+     "seed": 104,
+     "returns": 19,
+     "misses": 0,
+     "rally_rate": 100
+    }
+   ],
+   "errors": 0,
+   "latency_ms": {
+    "p50": 330.3,
+    "p95": 390.6,
+    "mean": 339.6,
+    "server_p50": null
+   },
+   "tokens": {
+    "input": 440872,
+    "output": 45600,
+    "per_decision_input": 367
+   }
+  }
+ },
+ "versions": {
+  "decisions": {
+   "version": "decisions-v1",
+   "sha256": "bb08d111d3ae34fabb0606539f994c435573e7ec77d8e4d6ff8a32d4dc59519e"
+  },
+  "rally": {
+   "version": "rally-v1",
+   "seeds": [
+    101,
+    102,
+    103,
+    104
+   ],
+   "decisions": 300
+  }
+ },
+ "score": 98.9,
+ "seconds": 140.6,
+ "calls": {
+  "calls": 2100,
+  "errors": 0,
+  "inputTokens": 772381,
+  "outputTokens": 79800,
+  "lastError": ""
+ }
+}

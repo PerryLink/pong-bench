@@ -1,0 +1,256 @@
+{
+ "id": "20261010-020954_h2o-lightning-local_minimal",
+ "pongbench": "1.0.0",
+ "created": "2026-10-10T02:09:54.985Z",
+ "label": "laptop in quiet mode; latency not representative",
+ "model": {
+  "name": "H2O-Lightning-4B (local GPU)",
+  "connector": "systemone",
+  "model": "h2o-lightning-4b",
+  "endpoint": "http://127.0.0.1:8798/v1/systemone"
+ },
+ "config": {
+  "name": "H2O-Lightning-4B (local GPU)",
+  "connector": "systemone",
+  "url": "http://127.0.0.1:8798/v1/systemone",
+  "model": "h2o-lightning-4b",
+  "auth": "none",
+  "concurrency": 1,
+  "note": "H2O-Lightning-4B served over System One on a laptop GPU (MXFP8 weights; 97% the same moves as the lossless build)",
+  "id": "h2o-lightning-local",
+  "file": "h2o-lightning-local.json",
+  "key": "not needed"
+ },
+ "track": "minimal",
+ "prompt": {
+  "name": "Minimal",
+  "builtin": true,
+  "note": "one line of instructions and bare comparisons: how much does the model need to be told?",
+  "instructions": "Right Pong paddle. y grows downward.",
+  "criteria": {
+   "up": "interceptY < paddle.y - {tol}",
+   "down": "interceptY > paddle.y + {tol}",
+   "stay": "otherwise, or interceptY is null"
+  },
+  "context": "",
+  "fields": [
+   "intercept"
+  ],
+  "decimals": 1
+ },
+ "tolerance": 5,
+ "stay_bias": 0,
+ "quick": false,
+ "concurrency": 1,
+ "suites": {
+  "decisions": {
+   "macro_accuracy": 78.22,
+   "accuracy": 78.2,
+   "per_move": {
+    "up": {
+     "right": 142,
+     "of": 300,
+     "accuracy": 47.3
+    },
+    "down": {
+     "right": 300,
+     "of": 300,
+     "accuracy": 100
+    },
+    "stay": {
+     "right": 262,
+     "of": 300,
+     "accuracy": 87.3
+    }
+   },
+   "per_kind": {
+    "away": {
+     "right": 150,
+     "of": 150,
+     "accuracy": 100
+    },
+    "covered": {
+     "right": 112,
+     "of": 150,
+     "accuracy": 74.7
+    }
+   },
+   "bands": {
+    "5-8": {
+     "right": 45,
+     "of": 91,
+     "accuracy": 49.5
+    },
+    "8-12": {
+     "right": 61,
+     "of": 96,
+     "accuracy": 63.5
+    },
+    "12+": {
+     "right": 336,
+     "of": 413,
+     "accuracy": 81.4
+    }
+   },
+   "edges": {
+    "top": {
+     "right": 21,
+     "of": 37,
+     "accuracy": 56.8
+    },
+    "bottom": {
+     "right": 16,
+     "of": 16,
+     "accuracy": 100
+    }
+   },
+   "confusion": {
+    "up": {
+     "up": 142,
+     "down": 0,
+     "stay": 158,
+     "error": 0
+    },
+    "down": {
+     "up": 0,
+     "down": 300,
+     "stay": 0,
+     "error": 0
+    },
+    "stay": {
+     "up": 0,
+     "down": 38,
+     "stay": 262,
+     "error": 0
+    }
+   },
+   "calibration": {
+    "n": 900,
+    "brier": 0.267,
+    "log_loss": 0.4757,
+    "ece": 0.0924,
+    "by_confidence": [
+     {
+      "from": 0.3,
+      "to": 0.4,
+      "n": 2,
+      "accuracy": 50
+     },
+     {
+      "from": 0.4,
+      "to": 0.5,
+      "n": 121,
+      "accuracy": 41.3
+     },
+     {
+      "from": 0.5,
+      "to": 0.6,
+      "n": 154,
+      "accuracy": 51.3
+     },
+     {
+      "from": 0.6,
+      "to": 0.7,
+      "n": 107,
+      "accuracy": 67.3
+     },
+     {
+      "from": 0.7,
+      "to": 0.8,
+      "n": 171,
+      "accuracy": 92.4
+     },
+     {
+      "from": 0.8,
+      "to": 0.9,
+      "n": 193,
+      "accuracy": 99.5
+     },
+     {
+      "from": 0.9,
+      "to": 1,
+      "n": 152,
+      "accuracy": 100
+     }
+    ]
+   },
+   "probabilities": "model",
+   "errors": 0,
+   "latency_ms": {
+    "p50": 64,
+    "p95": 69.7,
+    "mean": 65.7,
+    "server_p50": 61.3
+   },
+   "tokens": null
+  },
+  "rally": {
+   "rally_rate": 66.3,
+   "returns": 67,
+   "misses": 34,
+   "decisions": 1200,
+   "misses_per_100_returns": 50.7,
+   "rule_match": 72.9,
+   "longest_rally": 7,
+   "per_seed": [
+    {
+     "seed": 101,
+     "returns": 17,
+     "misses": 8,
+     "rally_rate": 68
+    },
+    {
+     "seed": 102,
+     "returns": 17,
+     "misses": 7,
+     "rally_rate": 70.8
+    },
+    {
+     "seed": 103,
+     "returns": 16,
+     "misses": 11,
+     "rally_rate": 59.3
+    },
+    {
+     "seed": 104,
+     "returns": 17,
+     "misses": 8,
+     "rally_rate": 68
+    }
+   ],
+   "errors": 0,
+   "latency_ms": {
+    "p50": 63.3,
+    "p95": 66.5,
+    "mean": 63.1,
+    "server_p50": 60.8
+   },
+   "tokens": null
+  }
+ },
+ "versions": {
+  "decisions": {
+   "version": "decisions-v1",
+   "sha256": "bb08d111d3ae34fabb0606539f994c435573e7ec77d8e4d6ff8a32d4dc59519e"
+  },
+  "rally": {
+   "version": "rally-v1",
+   "seeds": [
+    101,
+    102,
+    103,
+    104
+   ],
+   "decisions": 300
+  }
+ },
+ "score": 72.3,
+ "seconds": 134.9,
+ "calls": {
+  "calls": 2100,
+  "errors": 0,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "lastError": ""
+ }
+}
