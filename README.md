@@ -57,7 +57,8 @@ What stands out:
   soft spot: 22 of its 25 mistakes are `stay` where the answer was `down`, mostly when the ball lands just outside the
   5-unit window (75.8% right in the 5 to 8 unit band, 100% beyond 12).
 - **H2O-Lightning-4B** is a 4B model on a local GPU. It scores 84.7 with the official prompt and **95.8** with the
-  compact one (72.3 with the one-line minimal prompt): small models care a lot about how the question is put.
+  compact one (72.3 with the one-line minimal prompt): small models care a lot about how the question is put. It is
+  also fast: 20 to 37 ms per decision (p50) on a laptop GPU, about ten times quicker than Jev's hosted round trip.
 - **The reasoning track separates models.** Without `interceptY` the model has to work out the bounce from the ball's
   position and velocity. Jev drops to 85.3; H2O-Lightning to 49.4, because it falls back to `stay` most of the time.
 - **Speed never leaks into the score.** H2O-Lightning was run twice, with the laptop in its quiet and then its
@@ -227,7 +228,7 @@ More in [`docs/APP.md`](docs/APP.md).
 |---|---|
 | `check --config <name>` | four decisions, one of each kind: is the endpoint wired up right? |
 | `run --config <name>` | the benchmark; `--quick`, `--track`, `--suites decisions,rally,arena`, `--prompt file.json`, `--concurrency`, `--label` |
-| `serve [--config <name>]` | the app |
+| `serve [--config <name>] [--open]` | the app; `--open` also opens it in the default browser |
 | `configs` | every config and whether its key is found |
 | `suites [--build]` | verify the frozen suites (or rebuild them, byte for byte) |
 | `leaderboard` | rebuild `results/LEADERBOARD.md` from every scorecard |
@@ -245,6 +246,9 @@ suites/              the frozen test material (decisions-v1.json, SHA-256 in the
 configs/             one JSON per endpoint
 results/             every scorecard, and LEADERBOARD.md
 examples/            a System One server template, a transformers server, a custom connector
+tools/               the README results table, re-scoring, publishing a run without timing, screenshots
+tests/check.mjs      npm test: 25 checks, no network, no GPU
+Start-PongBench.bat, Start-PongBench.command, start-pongbench.sh    launchers for Windows, macOS, macOS and Linux
 ```
 
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) follows one decision from the game to the model and back.
@@ -257,6 +261,10 @@ examples/            a System One server template, a transformers server, a cust
   connector against the bundled transformers server. The Anthropic, Azure, Databricks, Cloudflare, OpenRouter, Gemini
   and Ollama configs follow those providers' documentation and the same code paths, but were not run against the real
   services here. If one needs a fix, a pull request with the `check` output is very welcome.
+- **Platforms.** Checked by hand on Windows 11 and on Linux (Debian 12, Node 18 and 22): the tests, the frozen suites, a
+  run, the launcher, the app's pages on a case-sensitive file system, HTTP and WebSocket decisions. macOS runs the same
+  code, and the CI workflow runs the checks on Linux, macOS and Windows with Node 18, 20 and 22 on every push, but no
+  Mac was at hand for a check by hand.
 - **The app is for your own machine.** It holds your keys and spends your credits, so it refuses requests from other
   websites and DNS-rebinding tricks, and switches endpoints only by config name. Details in [`docs/APP.md`](docs/APP.md).
 - **One game, one skill.** PongBench measures reading a small numeric state and picking an action under a stated rule,

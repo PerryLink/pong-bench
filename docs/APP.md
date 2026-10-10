@@ -1,12 +1,20 @@
 # The app
 
 ```bash
-node bin/pongbench.js serve --config typesafe-jev        # then open http://127.0.0.1:8800
+node bin/pongbench.js serve --config typesafe-jev --open   # http://127.0.0.1:8800, opened in the default browser
 ```
 
-(`npm start` anywhere; or double-click `Start-PongBench.bat` on Windows or `Start-PongBench.command` on macOS, or run
-`./start-pongbench.sh` on macOS and Linux. `--open` opens the browser with `start`, `open` or `xdg-open`.) The server holds the endpoint config and any key; the page never
-sees a key. It binds to 127.0.0.1 unless you pass `--host`.
+| | Start it with | Stop it |
+|---|---|---|
+| any system | `npm start` (the scripted player) or the command above | Ctrl+C |
+| Windows | double-click `Start-PongBench.bat`, or `Start-PongBench.bat typesafe-jev` | close the window |
+| macOS | double-click `Start-PongBench.command` in Finder, or `./start-pongbench.sh typesafe-jev` | close the Terminal window, or Ctrl+C |
+| Linux | `./start-pongbench.sh typesafe-jev` | Ctrl+C |
+
+`--open` uses the system's own opener (`start`, `open` or `xdg-open`); without a desktop (a server, SSH, a container)
+it prints the address instead. The server holds the endpoint config and any key; the page never sees a key. It binds
+to 127.0.0.1 unless you pass `--host`. The page is plain HTML, CSS and JavaScript modules with no build step; it was
+checked in Chrome.
 
 Other websites open in the same browser cannot use it. The server answers only requests addressed to
 `127.0.0.1:<port>` or `localhost:<port>` (so a rebound DNS name gets nothing), refuses any browser request or WebSocket

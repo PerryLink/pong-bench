@@ -12,6 +12,9 @@ and played against. Follow these steps in order. Each step says how to verify it
   on a paid API, and start with `--quick` (600 calls).
 - Docs to read when needed: `docs/CONNECTORS.md` (every endpoint type), `docs/SPEC.md` (the request and answer),
   `docs/BENCHMARK.md` (the suites and the score).
+- It works the same on Windows, macOS and Linux. Every command here is `node ...` and runs in any shell. For Python use
+  `python3` on macOS and Linux (`python` on Windows), inside a virtual environment. In configs, write paths with forward
+  slashes (`../models/x`): they work on every OS.
 
 ## 1. Check the tools
 
@@ -21,6 +24,10 @@ npm test              # about ten seconds; must end with "all ... checks passed"
 ```
 
 No `npm install` is needed. (Only for Claude models: `npm install @anthropic-ai/sdk`.)
+
+If Node is missing or older than 18.17: macOS `brew install node`; Linux [nvm](https://github.com/nvm-sh/nvm)
+(`nvm install 22`) or the distribution's package if it is new enough; Windows the installer from nodejs.org. Ask the
+user before installing anything.
 
 ## 2. Find out what kind of endpoint the model has
 
@@ -76,13 +83,17 @@ Save a prompt as JSON (shape in `docs/PROMPTS.md`) and run with `--prompt my-pro
 Read `results/<run>/scorecard.md` and tell the user: the PongBench score; decisions macro accuracy with up, down and
 stay; the rally rate and misses; the weak spots the scorecard shows (the 5 to 8 unit band, the edges, a confusion
 pattern such as "stay" instead of "up"); latency and errors. Point them to `results/LEADERBOARD.md` for comparison with
-the reference models.
+the reference models (it ranks the latest comparable full run per model and track). If the user does not want their
+machine's latency in a result they share, run `node tools/strip-timing.mjs <run-id>`: the score does not change.
 
 ## 8. (Optional) Open the app
 
 ```bash
-node bin/pongbench.js serve --config <short-name>      # http://127.0.0.1:8800
+node bin/pongbench.js serve --config <short-name> --open      # http://127.0.0.1:8800, opened in the browser
 ```
+
+(Or the launchers: `Start-PongBench.bat` on Windows, `./start-pongbench.sh <short-name>` on macOS and Linux.) The
+server keeps running until the user closes it or presses Ctrl+C.
 
 Play against the model, watch it play, run the benchmark from the Bench tab, tune prompts in the Prompt lab.
 

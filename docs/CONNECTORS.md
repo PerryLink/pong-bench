@@ -141,7 +141,8 @@ a one-word decision rarely needs more than `"effort": "low"`.
 
 The module exports `create(options)` returning `{ decide({ state, questions }, { signal }) }`, which returns
 `{ choice }` or `{ choice, probabilities: { up, down, stay } }` (or the full System One shape). `path` is relative to the
-config file. See [`examples/custom-connector.mjs`](../examples/custom-connector.mjs).
+config file. See [`examples/custom-connector.mjs`](../examples/custom-connector.mjs). Write `path` and `apiKeyFile`
+with forward slashes: they work on Windows, macOS and Linux.
 
 ## Baselines (`mock`)
 
@@ -160,3 +161,6 @@ common decision-model mistake). `latencyMs` and `jitterMs` simulate answer time.
 | `could not reach` | the server is not running, or the port differs |
 | `the model answered "..."` | a chat model wandered off: try `"answer": "json"`, or `"text"` with a larger `maxTokens` |
 | probabilities `(one-hot)` | the endpoint returns one answer only: fine for scoring, but calibration is not measured |
+| `the key in ... has spaces, line breaks` | the key file or `.env` line holds more than the key: one line, the key only |
+| `pip install` says the environment is externally managed | macOS (Homebrew) and recent Debian or Ubuntu: use a virtual environment, see [`examples/README.md`](../examples/README.md) |
+| a local server works on its own machine but not from PongBench in a container or VM | `127.0.0.1` inside a container is the container: use the host's address, e.g. `host.docker.internal` |

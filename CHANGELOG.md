@@ -18,4 +18,11 @@ First release.
 - The app refuses requests from other websites (Host, Origin and content-type checks; WebSockets too), picks configs by
   name only, and never shows a key: keys must be one printable line, are redacted from provider errors, and key-like URL
   parameters are masked wherever a config is shown or saved.
-- Reference results: baselines, Jev (TypeSafe) and H2O-Lightning-4B on all four tracks.
+- Runs on Windows, macOS and Linux: launchers for each (`Start-PongBench.bat`, `Start-PongBench.command`,
+  `start-pongbench.sh`), `serve --open` with the system's own opener, LF line endings, a test that every import and
+  link matches its file name's case, and CI on all three systems with Node 18, 20 and 22. The transformers server picks
+  CUDA, Apple's MPS or the CPU by itself.
+- Tools: `results-table.mjs` (the README table), `rescore.mjs`, `strip-timing.mjs` (publish a run without its latency),
+  `screenshot.mjs`.
+- Reference results: baselines, Jev (TypeSafe) and H2O-Lightning-4B on all four tracks. H2O-Lightning was run in two
+  power modes; all 8,400 decisions were identical.

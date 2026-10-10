@@ -7,6 +7,17 @@
 | `mock-systemone-server.mjs` | a built-in player behind System One (Node), to test a client without a model |
 | `custom-connector.mjs` | a player for the `module` connector: any JavaScript |
 
+Set up Python once, in a virtual environment (Homebrew Python and recent Debian or Ubuntu refuse a system-wide
+`pip install`). Install PyTorch for your hardware first if you need a specific build (pytorch.org lists the command).
+
+```bash
+python3 -m venv .venv                      # Windows: python -m venv .venv
+. .venv/bin/activate                       # Windows: .venv\Scripts\activate
+pip install torch transformers
+```
+
+Then:
+
 ```bash
 python3 examples/python/hf_server.py --model Qwen/Qwen3-4B-Instruct-2507 --port 8001   # "python" on Windows
 node bin/pongbench.js check --config hf-local             # OpenAI route, probabilities from logprobs

@@ -4,8 +4,12 @@
   "description": "A game benchmark for decision models: any System One, OpenAI-compatible, Anthropic or custom endpoint plays Pong one typed decision at a time.",
   "type": "module",
   "license": "Apache-2.0",
-  "engines": { "node": ">=18.17" },
-  "bin": { "pongbench": "bin/pongbench.js" },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "bin": {
+    "pongbench": "bin/pongbench.js"
+  },
   "scripts": {
     "start": "node bin/pongbench.js serve --open",
     "check": "node bin/pongbench.js check",
@@ -16,6 +20,23 @@
   },
   "dependencies": {},
   "optionalDependencies": {},
-  "peerDependenciesMeta": { "@anthropic-ai/sdk": { "optional": true } },
-  "keywords": ["benchmark", "decision-model", "system-one", "jev", "pong", "llm", "evaluation", "openai-compatible"]
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "benchmark",
+    "decision-model",
+    "system-one",
+    "jev",
+    "pong",
+    "llm",
+    "evaluation",
+    "openai-compatible",
+    "game-benchmark",
+    "windows",
+    "macos",
+    "linux"
+  ]
 }

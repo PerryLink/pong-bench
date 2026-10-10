@@ -7,6 +7,7 @@ server, and the page (which imports the same game modules the runner uses).
 bin/pongbench.js            the command line: check, run, serve, configs, suites, leaderboard
 src/
   config.js                 configs/*.json, keys from env or files, .env, nothing secret in public copies
+  open.js                   serve --open: start (Windows), open (macOS), xdg-open (Linux)
   game/                     shared by Node and the browser (served at /game/)
     engine.js               the upstream lockstep engine (decisio v0.10.0, line for line)
     realtime.js             the real-time game: a clock, fixed 1/240 s physics steps, bots
@@ -28,7 +29,9 @@ suites/                     the frozen test material
 configs/                    one JSON per endpoint
 results/                    scorecards (commit them), LEADERBOARD.md
 examples/                   servers and a custom connector
+tools/                      results-table.mjs (the README table), rescore.mjs, strip-timing.mjs, screenshot.mjs
 tests/check.mjs             npm test
+Start-PongBench.bat, Start-PongBench.command, start-pongbench.sh     launchers (Windows, macOS, macOS and Linux)
 ```
 
 ## A decision, end to end
@@ -47,6 +50,14 @@ tests/check.mjs             npm test
 The page sends `{id, state, questions}` over `/ws`; the server calls the active connector and answers `{id, choice,
 probs, probSource, ms, usage}`. Keys stay in the server process. The Bench tab posts to `/api/bench/start`, and the
 server runs `runBench()` with the active connector, pushing progress on `/api/bench/events` (Server-Sent Events).
+
+## Portability
+
+Windows, macOS and Linux run the same files. Paths are built with `node:path`, file names match their imports exactly
+(a test checks every import, page asset and doc link, because Linux and macOS file systems are case sensitive),
+`.gitattributes` keeps every text file LF in every checkout (the `#!` line of `bin/pongbench.js` and the shell
+launchers need it) and batch files CRLF, and the only per-OS code is `src/open.js`. CI runs `npm test`, the suite
+check and a quick run on all three systems with Node 18, 20 and 22.
 
 ## Determinism
 

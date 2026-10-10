@@ -2,7 +2,12 @@
 
 Thank you for helping. PongBench stays small on purpose: Node 18+, no dependencies, one file per concern.
 
-- **Run the checks** before a pull request: `npm test` (about ten seconds, no network, no GPU).
+- **Run the checks** before a pull request: `npm test` (about ten seconds, no network, no GPU). CI runs them on Linux,
+  macOS and Windows with Node 18, 20 and 22.
+- **Keep it portable.** Build paths with `node:path` (`join`, `resolve`), never with `\` or `/` by hand; import files
+  with their exact case (Linux and macOS file systems are case sensitive, and a test checks every import, page asset
+  and doc link); no shell commands in Node code. The three launchers (`Start-PongBench.bat`, `Start-PongBench.command`,
+  `start-pongbench.sh`) change together. Text files are stored with LF (`.gitattributes`), batch files with CRLF.
 - **A new connector**: add `src/connectors/<name>.js` exporting `create(config, {key, baseDir})` that returns
   `{kind, url, decide({state, questions}, {signal})}`; register it in `src/connectors/index.js` and `src/config.js`
   (`CONNECTORS`), add a config to `configs/`, a section to `docs/CONNECTORS.md`, and a mock-server test to
@@ -10,8 +15,9 @@ Thank you for helping. PongBench stays small on purpose: Node 18+, no dependenci
 - **A provider recipe** (a new hosted endpoint that already speaks System One or OpenAI chat): just a config in
   `configs/` and a section in `docs/CONNECTORS.md`.
 - **Results**: run `node bin/pongbench.js run --config <yours>` (full, not `--quick`), and open a pull request with the
-  `results/<run>/` folder. Say what hardware or service produced the latency numbers. Never commit keys: configs name
-  an environment variable, and `.env` is ignored.
+  `results/<run>/` folder. Say what hardware or service produced the latency numbers, or publish the run without them
+  (`node tools/strip-timing.mjs <run-id>`). Never commit keys: configs name an environment variable, and `.env` is
+  ignored.
 - **The suites are frozen.** A change to the game, the rule, the suite builder or the standard track changes what a
   score means: it needs a new suite version (`decisions-v2`), never an edit to `decisions-v1`.
 - Writing style for docs and messages: plain words, short sentences, no em dashes.

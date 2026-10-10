@@ -16,4 +16,5 @@ put `NAME=value` in the repository's `.env`). Every field is explained in [../do
 | `anthropic` | Claude through the official SDK |
 | `custom-module` | your own JavaScript (`examples/custom-connector.mjs`) |
 
-Placeholders to replace are written `REPLACE_...`.
+Placeholders to replace are written `REPLACE_...`. Paths in a config (`path`, `apiKeyFile`) are relative to the
+config file; write them with forward slashes and they work on Windows, macOS and Linux.

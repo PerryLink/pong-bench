@@ -19,4 +19,5 @@ before starting it, then run the full benchmark on the standard track. Finish wi
 the rally rate and the weak spots from the scorecard, in plain words.
 ```
 
-The agent will ask before anything that costs money or needs a key.
+The agent will ask before anything that costs money or needs a key. It works the same on Windows, macOS and Linux:
+the agent uses the commands for your system.

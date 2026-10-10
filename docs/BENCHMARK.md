@@ -107,7 +107,8 @@ Jev's latency was measured from India to TypeSafe's hosted API; H2O-Lightning's 
   allowed for exploration and is recorded in the scorecard, which is then not comparable.
 - A config may set any decoding the endpoint offers (temperature, reasoning effort, provider routing): it is saved, keys
   removed, with the result.
-- Report the hardware or service and where it was measured from: latency means nothing without it.
+- Report the hardware or service and where it was measured from: latency means nothing without it. Or publish the run
+  without timing (`node tools/strip-timing.mjs <run-id>`): the score is the same.
 
 ## What PongBench does not tell you
 
