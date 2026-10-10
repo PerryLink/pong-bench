@@ -1,0 +1,6 @@
+PongBench
+Copyright 2026 the PongBench authors
+
+This product includes software from the decisio project (https://github.com/aminry/decisio), Apache License 2.0,
+which includes jev-pong by Ably Labs (https://github.com/ably-labs/jev-pong), Apache License 2.0.
+See ATTRIBUTION.md for the files concerned and what was changed.
