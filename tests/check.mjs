@@ -4,7 +4,8 @@
 //             the paddle moves only on answers, at the set speed), outdated answers dropped
 //   suites    the frozen decisions suite matches its hash, rebuilds identically, has the right mix, no pinned states
 //   prompts   the standard track is decisio's text word for word; fields; cleanPrompt; pickMove
-//   connectors  mock players; systemone (bearer, basic, Workers AI envelope, errors, model field); openai (logprobs
+//   connectors  mock players; systemone (bearer, basic, Workers AI envelope, errors, model field); phocinae (list
+//             questions out, index answers back, errors); openai (logprobs
 //             with leading spaces, auto fallback to text, json mode, Azure api-key + query, Retry-After); module; config
 //             safety (no inline keys, nothing secret in public configs)
 //   runner    a quick run end to end, scorecard and leaderboard written, scores as expected
@@ -183,6 +184,39 @@ await t("systemone: 422 fails at once, 429 is retried after Retry-After", async 
   assert.equal(d.probSource, "one-hot");
   await assert.rejects(c.decide({ state: {}, questions: { move: {} } }), (e) => e.status === 422 && !e.retryable);
   assert.equal(srv.seen.length, 3);
+  srv.close();
+});
+await t("phocinae: list questions out, index answers back", async () => {
+  const srv = await mockServer(() => [200, {
+    model: "Phocinae-Largha-150M-v1", answers: { move: 1 },
+    usage: { input_tokens: 88, output_tokens: 0 },
+    answer_confidence: { move: 0.62 },
+    option_scores: { move: [0.1, 0.62, 0.28] },
+  }]);
+  const c = await connect(checkConfig({ connector: "phocinae", url: `${srv.url}/v1/systemone` }));
+  const d = await c.decide({ state: { ball: { x: 1, y: 2 } },
+                             questions: { move: { type: "choice", instructions: "i", criteria: { up: "u", down: "d", stay: "s" } } } });
+  assert.equal(d.choice, "down");
+  assert.deepEqual(d.probs.map((p) => Math.round(p * 100) / 100), [0.1, 0.62, 0.28]);
+  assert.equal(d.probSource, "model");
+  assert.equal(d.usage.input_tokens, 88);
+  const sent = srv.seen[0].body;
+  assert.ok(Array.isArray(sent.questions) && sent.questions.length === 1, "phocinae questions must be a list");
+  assert.equal(sent.questions[0].id, "move");
+  assert.equal(sent.questions[0].type, "choice");
+  assert.deepEqual(sent.questions[0].options, ["u", "d", "s"], "criteria descriptions become the options, in order");
+  assert.equal(typeof sent.state, "string", "phocinae-server takes state as a string");
+  assert.equal(sent.model, "Phocinae-Largha-150M-v1");
+  srv.close();
+});
+await t("phocinae: a bad index or a body without answers fails cleanly", async () => {
+  const srv = await mockServer((req, body, n) => n === 1
+    ? [200, { answers: { move: 7 }, option_scores: { move: [0.5, 0.3, 0.2] } }]
+    : [200, { nope: 1 }]);
+  const c = await connect(checkConfig({ connector: "phocinae", url: srv.url, auth: "none", retries: 0 }));
+  const req = { state: "s", questions: { move: { criteria: { up: "u", down: "d", stay: "s" } } } };
+  await assert.rejects(c.decide(req), (e) => e.name === "ConnectorError" && /option index/.test(e.message));
+  await assert.rejects(c.decide(req), (e) => e.name === "ConnectorError" && /answers/.test(e.message));
   srv.close();
 });
 await t("openai: logprobs give probabilities (leading spaces and quotes are skipped)", async () => {

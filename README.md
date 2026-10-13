@@ -115,6 +115,7 @@ instead.
 | `POST /v1/systemone`: TypeSafe Jev, Databricks AI Gateway, Cloudflare Workers AI (Clef), Ollama 0.35+, OpenJev and other System One servers | `systemone` | [`typesafe-jev`](configs/typesafe-jev.json), [`systemone-local`](configs/systemone-local.json), [`databricks-systemone`](configs/databricks-systemone.json), [`cloudflare-clef`](configs/cloudflare-clef.json), [`ollama-systemone`](configs/ollama-systemone.json) |
 | an OpenAI-compatible chat API: OpenAI, Azure OpenAI, OpenRouter, Gemini, vLLM, SGLang, llama.cpp, LM Studio, Ollama | `openai` | [`openai`](configs/openai.json), [`azure-openai`](configs/azure-openai.json), [`openrouter`](configs/openrouter.json), [`gemini`](configs/gemini.json), [`vllm`](configs/vllm.json), [`llamacpp`](configs/llamacpp.json), [`lmstudio`](configs/lmstudio.json), [`ollama-chat`](configs/ollama-chat.json) |
 | a Claude model | `anthropic` | [`anthropic`](configs/anthropic.json) (`npm install @anthropic-ai/sdk` first) |
+| Phocinae-Largha served by [`phocinae-server`](https://github.com/Phocinae/phocinae-server) | `phocinae` | [`phocinae-local`](configs/phocinae-local.json) |
 | open weights with no server yet (any Hugging Face causal LM; NVIDIA, Apple-silicon or CPU) | start [`hf_server.py`](examples/python/hf_server.py), then `openai` or `systemone` | [`hf-local`](configs/hf-local.json), [`hf-local-systemone`](configs/hf-local-systemone.json) |
 | anything else (an SDK, a local process, a rule) | `module` | [`custom-module`](configs/custom-module.json) and [`custom-connector.mjs`](examples/custom-connector.mjs) |
 
@@ -239,7 +240,7 @@ More in [`docs/APP.md`](docs/APP.md).
 ```
 bin/pongbench.js     the command line
 src/game/            the game, shared by Node and the browser: upstream engine, real-time engine, tracks
-src/connectors/      systemone, openai, anthropic, module, mock
+src/connectors/      systemone, phocinae, openai, anthropic, module, mock
 src/bench/           suites, matches, metrics, runner, reports
 src/server/          the app's server (HTTP, WebSocket, Server-Sent Events)
 web/                 the app
@@ -248,7 +249,7 @@ configs/             one JSON per endpoint
 results/             every scorecard, and LEADERBOARD.md
 examples/            a System One server template, a transformers server, a custom connector
 tools/               the README results table, re-scoring, publishing a run without timing, screenshots
-tests/check.mjs      npm test: 25 checks, no network, no GPU
+tests/check.mjs      npm test: 27 checks, no network, no GPU
 Start-PongBench.bat, Start-PongBench.command, start-pongbench.sh    launchers for Windows, macOS, macOS and Linux
 ```
 
@@ -258,8 +259,8 @@ Start-PongBench.bat, Start-PongBench.command, start-pongbench.sh    launchers fo
 
 - **Rally saturates for strong models.** A model that is right most of the time survives the wall. Among strong models
   the decisions suite does the ranking, and the reasoning track has the headroom.
-- **Tested live:** the `systemone` connector against TypeSafe's API and a local System One server, and the `openai`
-  connector against the bundled transformers server. The Anthropic, Azure, Databricks, Cloudflare, OpenRouter, Gemini
+- **Tested live:** the `systemone` connector against TypeSafe's API and a local System One server, the `phocinae`
+  connector against a local `phocinae-server`, and the `openai` connector against the bundled transformers server. The Anthropic, Azure, Databricks, Cloudflare, OpenRouter, Gemini
   and Ollama configs follow those providers' documentation and the same code paths, but were not run against the real
   services here. If one needs a fix, a pull request with the `check` output is very welcome.
 - **Platforms.** Checked by hand on Windows 11 and on Linux (Debian 12, Node 18 and 22): the tests, the frozen suites, a

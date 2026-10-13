@@ -52,6 +52,21 @@ Open-weight System One models people serve this way include OpenJev, Clef and Cl
 H2O-Lightning and Liquid's d1; local servers include Ollama (0.35+), Ollajev and Ollaya. Check each model's card for
 its own server or shim.
 
+### Phocinae-Largha (phocinae-server)
+
+```json
+{ "name": "Phocinae-Largha (local)", "connector": "phocinae", "url": "http://127.0.0.1:8155/v1/systemone",
+  "auth": "none", "concurrency": 1 }
+```
+
+`phocinae` is a connector of its own because `phocinae-server` (github.com/Phocinae/phocinae-server), which serves the
+Phocinae-Largha-150M-v1 decision model, has two shape differences from the other System One servers: it takes
+`questions` as a list of `{id, type, options}` rather than a map, and a choice answer is the 0-based option index with
+per-option probabilities in `option_scores`. The connector translates both ways; everything else matches. Start the
+server with `PHOC_MODEL_DIR=<weights checkout> python -m phocinae.main` (weights:
+huggingface.co/Phocinae/Phocinae-Largha-150M-v1). It runs on CPU or CUDA, and needs no key unless the server sets
+`PHOC_BEARER_TOKEN`.
+
 ### Ollama decision models
 
 ```json

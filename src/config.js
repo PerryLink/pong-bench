@@ -7,8 +7,8 @@ import { fileURLToPath } from "node:url";
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const CONFIG_DIR = join(ROOT, "configs");
-export const CONNECTORS = ["systemone", "openai", "anthropic", "mock", "module"];
-const DEFAULT_KEY_ENV = { systemone: "SYSTEM_ONE_API_KEY", openai: "OPENAI_API_KEY", anthropic: "ANTHROPIC_API_KEY" };
+export const CONNECTORS = ["systemone", "phocinae", "openai", "anthropic", "mock", "module"];
+const DEFAULT_KEY_ENV = { systemone: "SYSTEM_ONE_API_KEY", phocinae: "PHOCINAE_API_KEY", openai: "OPENAI_API_KEY", anthropic: "ANTHROPIC_API_KEY" };
 
 /** KEY=value lines from .env into process.env (existing variables win). */
 export function loadEnv(file = join(ROOT, ".env")) {

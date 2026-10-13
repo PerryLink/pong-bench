@@ -1,0 +1,9 @@
+{
+  "name": "Phocinae-Largha (local)",
+  "connector": "phocinae",
+  "model": "Phocinae-Largha-150M-v1",
+  "url": "http://127.0.0.1:8155/v1/systemone",
+  "auth": "none",
+  "concurrency": 1,
+  "note": "phocinae-server serving Phocinae-Largha-150M-v1; start it with PHOC_MODEL_DIR=<weights> python -m phocinae.main (github.com/Phocinae/phocinae-server)"
+}

@@ -3,12 +3,13 @@
 import { maskUrl, resolveKey } from "../config.js";
 import { ConnectorError } from "./common.js";
 import * as systemone from "./systemone.js";
+import * as phocinae from "./phocinae.js";
 import * as openai from "./openai.js";
 import * as anthropic from "./anthropic.js";
 import * as mock from "./mock.js";
 import * as moduleConnector from "./module.js";
 
-const KINDS = { systemone, openai, anthropic, mock, module: moduleConnector };
+const KINDS = { systemone, phocinae, openai, anthropic, mock, module: moduleConnector };
 
 export async function connect(cfg) {
   const kind = KINDS[cfg.connector];

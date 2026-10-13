@@ -9,6 +9,7 @@ put `NAME=value` in the repository's `.env`). Every field is explained in [../do
 | `mock-*` | built-in baselines: oracle, random, always stay, noisy (10% wrong), hesitant |
 | `typesafe-jev` | TypeSafe's hosted Jev (`TYPESAFE_API_KEY`) |
 | `systemone-local`, `ollama-systemone` | a System One server on this machine; Ollama 0.35+ decision models |
+| `phocinae-local` | `phocinae-server` (Phocinae-Largha-150M-v1) on this machine |
 | `databricks-systemone`, `cloudflare-clef` | OpenJev on Databricks; Clef-flash on Cloudflare Workers AI |
 | `openai`, `openai-reasoning`, `azure-openai`, `openrouter`, `gemini` | hosted chat APIs |
 | `vllm`, `llamacpp`, `lmstudio`, `ollama-chat` | local OpenAI-compatible servers |
